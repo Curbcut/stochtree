@@ -1,0 +1,15 @@
+# Temporary NASH dependency fork
+
+This R-installable branch is generated with `Rscript cran-bootstrap.R 0 0 1`
+from the `codex/nash-fixes` source branch at commit
+`67cb458b` in Curbcut/stochtree.
+
+It combines these local bug fixes:
+
+- Correct MCMC grow and prune proposal probabilities (5c5f2e8a).
+- Fix extrema calculation in MCMC split helpers (1c846cfd).
+- Fix NaN ordering in GFR feature presorting (7d364ad2).
+
+NASH pins the generated R-package commit in its DESCRIPTION Remotes field.
+After upstream includes all three fixes in a verified release, remove that
+Remotes entry and require the fixed upstream version in Imports.
