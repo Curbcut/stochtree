@@ -102,3 +102,5 @@ importFrom(stats,sd)
 importFrom(stats,sigma)
 importFrom(stats,var)
 useDynLib(stochtree, .registration = TRUE)
+
+export(sampleBARTSelectedPosteriorPredictive)

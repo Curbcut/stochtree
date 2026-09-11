@@ -96,6 +96,15 @@ NULL
 #' @param num_gfr Number of "warm-start" iterations run using the grow-from-root algorithm (He and Hahn, 2021). Default: 5.
 #' @param num_burnin Number of "burn-in" iterations of the MCMC sampler. Default: 0.
 #' @param num_mcmc Number of "retained" iterations of the MCMC sampler. Default: 100.
+#' @param retained_sample_ids Optional strictly increasing unique zero-based posterior
+#' sample IDs. Sampling still runs every iteration. Returns a `bartselected` bundle:
+#' `model` is an ordinary BART model containing only these forests and matching
+#' training/variance samples; the outer bundle retains full training/variance draws
+#' and full test means when `X_test` is supplied. Use
+#' [sampleBARTSelectedPosteriorPredictive()] for all-iteration test scoring.
+#' Only single-chain Gaussian constant-leaf mean forests without retained warmup,
+#' random effects, variance forests or previous-model initialization are supported.
+#' Cannot be combined with importance retention. Default `NULL` keeps existing behavior.
 #' @param forest_retention Forest output policy: `"all"` (default) retains the usual model.
 #' `"importance"` accumulates aggregate mean-forest split counts across exactly
 #' the retained iterations, without retaining posterior forests. It returns a
@@ -214,10 +223,12 @@ bart <- function(
   mean_forest_params = list(),
   variance_forest_params = list(),
   random_effects_params = list(),
-  forest_retention = c("all", "importance")
+  forest_retention = c("all", "importance"),
+  retained_sample_ids = NULL
 ) {
   forest_retention <- match.arg(forest_retention)
   importance_only <- identical(forest_retention, "importance")
+  selected_only <- !is.null(retained_sample_ids)
   # Update general BART parameters
   general_params_default <- list(
     cutpoint_grid_size = 100,
@@ -368,6 +379,28 @@ bart <- function(
       !is.null(previous_model_json) || !is.null(previous_model_warmstart_sample_num))) {
     stop(paste("Importance retention requires a single-chain Gaussian constant-leaf",
       "mean forest without test data, random effects, variance forests or previous-model initialization."))
+  }
+
+  if (selected_only) {
+    if (importance_only || !identical(outcome_model$outcome, "continuous") ||
+        !identical(outcome_model$link, "identity") || isTRUE(probit_outcome_model) ||
+        num_chains != 1 || num_trees_mean <= 0 || num_trees_variance != 0 ||
+        isTRUE(keep_gfr) || isTRUE(keep_burnin) || num_mcmc < 1 ||
+        !is.null(leaf_basis_train) || !is.null(leaf_basis_test) ||
+        !is.null(rfx_group_ids_train) || !is.null(rfx_group_ids_test) ||
+        !is.null(rfx_basis_train) || !is.null(rfx_basis_test) ||
+        !is.null(previous_model_json) || !is.null(previous_model_warmstart_sample_num)) {
+      stop("Selected retention requires a single-chain Gaussian constant-leaf mean forest, no retained warmup, and no random effects, variance forest or previous model.")
+    }
+    if (!is.numeric(retained_sample_ids) || !length(retained_sample_ids) ||
+        anyNA(retained_sample_ids) || any(!is.finite(retained_sample_ids)) ||
+        any(retained_sample_ids != floor(retained_sample_ids)) ||
+        any(retained_sample_ids < 0 | retained_sample_ids >= num_mcmc) ||
+        is.unsorted(retained_sample_ids, strictly = TRUE)) {
+      stop("retained_sample_ids must be strictly increasing, unique, zero-based posterior sample IDs.")
+    }
+    retained_sample_ids <- as.integer(retained_sample_ids)
+    selected_mask <- (seq_len(num_mcmc) - 1L) %in% retained_sample_ids
   }
 
   # Raise a deprecation warning to use `outcome_model` if `probit_outcome_model = TRUE` is specified
@@ -1514,6 +1547,9 @@ bart <- function(
       num_retained_samples
     )
   }
+  if (selected_only && has_test) {
+    selected_test_pred <- matrix(NA_real_, nrow(X_test), num_retained_samples)
+  }
   sample_counter <- 0
   if (importance_only) importance_split_counts <- numeric(ncol(X_train))
 
@@ -2189,9 +2225,13 @@ bart <- function(
             forest_model_config = forest_model_config_mean,
             global_model_config = global_model_config,
             num_threads = num_threads,
-            keep_forest = keep_sample && !importance_only,
+            keep_forest = keep_sample && !importance_only &&
+              (!selected_only || selected_mask[[sample_counter - num_gfr]]),
             gfr = FALSE
           )
+          if (selected_only && has_test && keep_sample) {
+            selected_test_pred[, sample_counter] <- active_forest_mean$predict(forest_dataset_test)
+          }
           if (importance_only && keep_sample) {
             importance_split_counts <- importance_split_counts +
               active_forest_mean$get_forest_split_counts(ncol(X_train))
@@ -2363,9 +2403,11 @@ bart <- function(
     # y_hat_train <- forest_samples_mean$predict(forest_dataset_train)*y_std_train + y_bar_train
     y_hat_train <- mean_forest_pred_train * y_std_train + y_bar_train
     if (has_test) {
-      y_hat_test <- forest_samples_mean$predict(forest_dataset_test) *
-        y_std_train +
-        y_bar_train
+      y_hat_test <- if (selected_only) {
+        selected_test_pred[, num_gfr + seq_len(num_mcmc), drop = FALSE] * y_std_train + y_bar_train
+      } else {
+        forest_samples_mean$predict(forest_dataset_test) * y_std_train + y_bar_train
+      }
     }
   }
 
@@ -2524,6 +2566,20 @@ bart <- function(
     class(result) <- "bartimportance"
   } else {
     class(result) <- "bartmodel"
+  }
+
+  if (selected_only) {
+    compact_model <- result
+    keep <- retained_sample_ids + 1L
+    compact_model$y_hat_train <- as.matrix(result$y_hat_train)[, keep, drop = FALSE]
+    compact_model$y_hat_test <- NULL
+    if (sample_sigma2_global) compact_model$sigma2_global_samples <- result$sigma2_global_samples[keep]
+    if (sample_sigma2_leaf) compact_model$sigma2_leaf_samples <- result$sigma2_leaf_samples[keep]
+    compact_model$model_params$num_samples <- length(keep)
+    result$mean_forests <- NULL
+    result$model <- compact_model
+    result$retained_sample_ids <- retained_sample_ids
+    class(result) <- "bartselected"
   }
 
   # Clean up classes with external pointers to C++ data structures

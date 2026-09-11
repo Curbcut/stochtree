@@ -845,31 +845,8 @@ sampleBARTPosteriorPredictive <- function(
     }
 
     # Sample from the posterior predictive distribution
-    if (is.null(num_draws_per_sample)) {
-      ppd_draw_multiplier <- posterior_predictive_heuristic_multiplier(
-        num_posterior_draws,
-        num_observations
-      )
-    } else {
-      ppd_draw_multiplier <- num_draws_per_sample
-    }
-    num_ppd_draws <- ppd_draw_multiplier *
-      num_posterior_draws *
-      num_observations
-    ppd_vector <- rnorm(num_ppd_draws, ppd_mean, sqrt(ppd_variance))
-
-    # Reshape data
-    if (ppd_draw_multiplier > 1) {
-      ppd_array <- array(
-        ppd_vector,
-        dim = c(num_observations, num_posterior_draws, ppd_draw_multiplier)
-      )
-    } else {
-      ppd_array <- array(
-        ppd_vector,
-        dim = c(num_observations, num_posterior_draws)
-      )
-    }
+    ppd_array <- sample_gaussian_predictive_draws(ppd_mean, ppd_variance,
+      num_posterior_draws, num_observations, num_draws_per_sample)
   } else if (is_probit || is_binary_cloglog) {
     # Compute posterior probability samples
     bart_preds <- predict(
@@ -1565,4 +1542,36 @@ validate_bcf_term <- function(term) {
       "'term' must be one of 'prognostic_function', 'mu', 'cate', 'tau', 'variance_forest', 'rfx', 'y_hat', or 'all' for bcfmodel objects"
     )
   }
+}
+
+
+sample_gaussian_predictive_draws <- function(ppd_mean, ppd_variance,
+  num_posterior_draws, num_observations, num_draws_per_sample) {
+    if (is.null(num_draws_per_sample)) {
+      ppd_draw_multiplier <- posterior_predictive_heuristic_multiplier(
+        num_posterior_draws,
+        num_observations
+      )
+    } else {
+      ppd_draw_multiplier <- num_draws_per_sample
+    }
+    num_ppd_draws <- ppd_draw_multiplier *
+      num_posterior_draws *
+      num_observations
+    ppd_vector <- rnorm(num_ppd_draws, ppd_mean, sqrt(ppd_variance))
+
+    # Reshape data
+    if (ppd_draw_multiplier > 1) {
+      ppd_array <- array(
+        ppd_vector,
+        dim = c(num_observations, num_posterior_draws, ppd_draw_multiplier)
+      )
+    } else {
+      ppd_array <- array(
+        ppd_vector,
+        dim = c(num_observations, num_posterior_draws)
+      )
+    }
+
+  ppd_array
 }

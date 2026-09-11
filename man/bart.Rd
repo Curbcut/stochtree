@@ -24,7 +24,8 @@ bart(
   mean_forest_params = list(),
   variance_forest_params = list(),
   random_effects_params = list(),
-  forest_retention = c("all", "importance")
+  forest_retention = c("all", "importance"),
+  retained_sample_ids = NULL
 )
 }
 \arguments{
@@ -72,6 +73,16 @@ referred to internally in the C++ layer as "variance weights" (\code{var_weights
 \item{num_burnin}{Number of "burn-in" iterations of the MCMC sampler. Default: 0.}
 
 \item{num_mcmc}{Number of "retained" iterations of the MCMC sampler. Default: 100.}
+
+\item{retained_sample_ids}{Optional strictly increasing unique zero-based posterior
+sample IDs. All iterations still run. Returns a \code{bartselected} bundle whose
+\code{model} is an ordinary BART model containing only the selected forests and
+matching training/variance samples. The outer bundle retains full training and
+variance samples and full test means when \code{X_test} is supplied. Use
+\code{sampleBARTSelectedPosteriorPredictive()} for all-iteration test scoring.
+Only single-chain Gaussian constant-leaf mean forests without retained warmup,
+random effects, variance forests or previous-model initialization are supported.
+Cannot be combined with importance retention. Default \code{NULL} keeps existing behavior.}
 
 \item{forest_retention}{Forest output policy: \code{"all"} (default) retains the usual model.
 \code{"importance"} accumulates aggregate mean-forest split counts across exactly
