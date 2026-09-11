@@ -279,6 +279,19 @@ preprocessPredictionMatrix <- function(input_matrix, metadata) {
   return(input_matrix)
 }
 
+# Bind ordinary numeric vectors once instead of copying a growing matrix.
+# Attributed columns retain the existing pairwise binding semantics.
+bindNumericCovariates <- function(numeric_df) {
+  columns <- lapply(seq_len(ncol(numeric_df)), function(i) numeric_df[, i])
+  stopifnot(all(vapply(columns, is.numeric, logical(1))))
+  if (all(vapply(columns, function(x) is.null(attributes(x)), logical(1)))) {
+    return(do.call(cbind, c(list(double(0)), columns)))
+  }
+  Xnum <- double(0)
+  for (column in columns) Xnum <- cbind(Xnum, column)
+  Xnum
+}
+
 #' Preprocess a dataframe of covariate values, converting categorical variables
 #' to integers and one-hot encoding if need be. Returns a list including a
 #' matrix of preprocessed covariate values and associated tracking.
@@ -341,11 +354,7 @@ preprocessTrainDataFrame <- function(input_df) {
 
   # First, extract the numeric covariates
   if (num_numeric_vars > 0) {
-    Xnum <- double(0)
-    for (i in 1:ncol(numeric_df)) {
-      stopifnot(is.numeric(numeric_df[, i]))
-      Xnum <- cbind(Xnum, numeric_df[, i])
-    }
+    Xnum <- bindNumericCovariates(numeric_df)
     X <- cbind(X, unname(Xnum))
     feature_types <- c(feature_types, rep(0, ncol(Xnum)))
     original_var_indices <- c(original_var_indices, numeric_var_inds)
@@ -456,11 +465,7 @@ preprocessPredictionDataFrame <- function(input_df, metadata) {
 
   # First, extract the numeric covariates
   if (num_numeric_vars > 0) {
-    Xnum <- double(0)
-    for (i in 1:ncol(numeric_df)) {
-      stopifnot(is.numeric(numeric_df[, i]))
-      Xnum <- cbind(Xnum, numeric_df[, i])
-    }
+    Xnum <- bindNumericCovariates(numeric_df)
     X <- cbind(X, unname(Xnum))
   }
 
