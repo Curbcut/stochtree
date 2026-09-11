@@ -96,6 +96,16 @@ NULL
 #' @param num_gfr Number of "warm-start" iterations run using the grow-from-root algorithm (He and Hahn, 2021). Default: 5.
 #' @param num_burnin Number of "burn-in" iterations of the MCMC sampler. Default: 0.
 #' @param num_mcmc Number of "retained" iterations of the MCMC sampler. Default: 100.
+#' @param forest_retention Forest output policy: `"all"` (default) retains the usual model.
+#' `"importance"` accumulates aggregate mean-forest split counts across exactly
+#' the retained iterations, without retaining posterior forests. It returns a
+#' `bartimportance` summary with `split_counts`, training draws, variance draws
+#' and metadata. Counts follow the processed covariate ordering. All sampling,
+#' burn-in and thinning transitions still run. GFR forests are temporarily kept
+#' for chain initialization. This mode currently supports single-chain Gaussian
+#' constant-leaf mean forests without test data, random effects, variance forests
+#' or previous-model initialization. It cannot predict new data, serve as a
+#' warm-start model or be saved with the BART model JSON functions.
 #' @param previous_model_json (Optional) JSON string containing a previous BART model. This can be used to "continue" a sampler interactively after inspecting the samples or to run parallel chains "warm-started" from existing forest samples. Default: `NULL`.
 #' @param previous_model_warmstart_sample_num (Optional) Sample number from `previous_model_json` that will be used to warmstart this BART sampler. One-indexed (so that the first sample is used for warm-start by setting `previous_model_warmstart_sample_num = 1`). Default: `NULL`.  If `num_chains` in the `general_params` list is > 1, then each successive chain will be initialized from a different sample, counting backwards from `previous_model_warmstart_sample_num`. That is, if `previous_model_warmstart_sample_num = 10` and `num_chains = 4`, then chain 1 will be initialized from sample 10, chain 2 from sample 9, chain 3 from sample 8, and chain 4 from sample 7. If `previous_model_json` is provided but `previous_model_warmstart_sample_num` is NULL, the last sample in the previous model will be used to initialize the first chain, counting backwards as noted before. If more chains are requested than there are samples in `previous_model_json`, a warning will be raised and only the last sample will be used.
 #' @param general_params (Optional) A list of general (non-forest-specific) model parameters, each of which has a default value processed internally, so this argument list is optional.
@@ -203,8 +213,11 @@ bart <- function(
   general_params = list(),
   mean_forest_params = list(),
   variance_forest_params = list(),
-  random_effects_params = list()
+  random_effects_params = list(),
+  forest_retention = c("all", "importance")
 ) {
+  forest_retention <- match.arg(forest_retention)
+  importance_only <- identical(forest_retention, "importance")
   # Update general BART parameters
   general_params_default <- list(
     cutpoint_grid_size = 100,
@@ -344,6 +357,18 @@ bart <- function(
   rfx_group_parameter_prior_cov <- rfx_params_updated$group_parameter_prior_cov
   rfx_variance_prior_shape <- rfx_params_updated$variance_prior_shape
   rfx_variance_prior_scale <- rfx_params_updated$variance_prior_scale
+
+  # Validate before changing RNG state or allocating sampler objects.
+  if (importance_only && (!identical(outcome_model$outcome, "continuous") ||
+      !identical(outcome_model$link, "identity") || isTRUE(probit_outcome_model) ||
+      num_chains != 1 || num_trees_mean <= 0 || num_trees_variance != 0 ||
+      !is.null(X_test) || !is.null(leaf_basis_train) || !is.null(leaf_basis_test) ||
+      !is.null(rfx_group_ids_train) || !is.null(rfx_group_ids_test) ||
+      !is.null(rfx_basis_train) || !is.null(rfx_basis_test) ||
+      !is.null(previous_model_json) || !is.null(previous_model_warmstart_sample_num))) {
+    stop(paste("Importance retention requires a single-chain Gaussian constant-leaf",
+      "mean forest without test data, random effects, variance forests or previous-model initialization."))
+  }
 
   # Raise a deprecation warning to use `outcome_model` if `probit_outcome_model = TRUE` is specified
   if (probit_outcome_model) {
@@ -1490,6 +1515,7 @@ bart <- function(
     )
   }
   sample_counter <- 0
+  if (importance_only) importance_split_counts <- numeric(ncol(X_train))
 
   # Initialize the leaves of each tree in the mean forest
   if (include_mean_forest) {
@@ -1632,6 +1658,11 @@ bart <- function(
           keep_forest = keep_sample,
           gfr = TRUE
         )
+
+        if (importance_only && keep_gfr) {
+          importance_split_counts <- importance_split_counts +
+            active_forest_mean$get_forest_split_counts(ncol(X_train))
+        }
 
         # Cache train set predictions since they are already computed during sampling
         if (keep_sample) {
@@ -2158,9 +2189,13 @@ bart <- function(
             forest_model_config = forest_model_config_mean,
             global_model_config = global_model_config,
             num_threads = num_threads,
-            keep_forest = keep_sample,
+            keep_forest = keep_sample && !importance_only,
             gfr = FALSE
           )
+          if (importance_only && keep_sample) {
+            importance_split_counts <- importance_split_counts +
+              active_forest_mean$get_forest_split_counts(ncol(X_train))
+          }
 
           # Cache train set predictions since they are already computed during sampling
           if (keep_sample) {
@@ -2480,7 +2515,16 @@ bart <- function(
   if ((has_rfx_test) && (has_test)) {
     result[["rfx_preds_test"]] = rfx_preds_test
   }
-  class(result) <- "bartmodel"
+  if (importance_only) {
+    result$mean_forests <- NULL
+    if (any(importance_split_counts > .Machine$integer.max)) {
+      stop("Importance split counts exceed the supported integer range.")
+    }
+    result$split_counts <- as.integer(importance_split_counts)
+    class(result) <- "bartimportance"
+  } else {
+    class(result) <- "bartmodel"
+  }
 
   # Clean up classes with external pointers to C++ data structures
   if (include_mean_forest) {

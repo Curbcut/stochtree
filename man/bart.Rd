@@ -23,7 +23,8 @@ bart(
   general_params = list(),
   mean_forest_params = list(),
   variance_forest_params = list(),
-  random_effects_params = list()
+  random_effects_params = list(),
+  forest_retention = c("all", "importance")
 )
 }
 \arguments{
@@ -71,6 +72,17 @@ referred to internally in the C++ layer as "variance weights" (\code{var_weights
 \item{num_burnin}{Number of "burn-in" iterations of the MCMC sampler. Default: 0.}
 
 \item{num_mcmc}{Number of "retained" iterations of the MCMC sampler. Default: 100.}
+
+\item{forest_retention}{Forest output policy: \code{"all"} (default) retains the usual model.
+\code{"importance"} accumulates aggregate mean-forest split counts across exactly
+the retained iterations, without retaining posterior forests. It returns a
+\code{bartimportance} summary with \code{split_counts}, training draws, variance draws
+and metadata. Counts follow the processed covariate ordering. All sampling,
+burn-in and thinning transitions still run. GFR forests are temporarily kept
+for chain initialization. This mode currently supports single-chain Gaussian
+constant-leaf mean forests without test data, random effects, variance forests
+or previous-model initialization. It cannot predict new data, serve as a
+warm-start model or be saved with the BART model JSON functions.}
 
 \item{previous_model_json}{(Optional) JSON string containing a previous BART model. This can be used to "continue" a sampler interactively after inspecting the samples or to run parallel chains "warm-started" from existing forest samples. Default: \code{NULL}.}
 
