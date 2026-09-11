@@ -564,6 +564,13 @@ void remove_sample_forest_container_cpp(cpp11::external_pointer<StochTree::Fores
 }
 
 [[cpp11::register]]
+void retain_samples_forest_container_cpp(cpp11::external_pointer<StochTree::ForestContainer> forest_samples,
+                                          cpp11::integers sample_ids) {
+    std::vector<int> ids(sample_ids.begin(), sample_ids.end());
+    forest_samples->RetainSamples(ids);
+}
+
+[[cpp11::register]]
 cpp11::writable::doubles_matrix<> predict_forest_cpp(cpp11::external_pointer<StochTree::ForestContainer> forest_samples, cpp11::external_pointer<StochTree::ForestDataset> dataset) {
     // Predict from the sampled forests
     std::vector<double> output_raw = forest_samples->Predict(*dataset);

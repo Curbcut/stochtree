@@ -1009,6 +1009,14 @@ extern "C" SEXP _stochtree_remove_sample_forest_container_cpp(SEXP forest_sample
   END_CPP11
 }
 // forest.cpp
+void retain_samples_forest_container_cpp(cpp11::external_pointer<StochTree::ForestContainer> forest_samples, cpp11::integers sample_ids);
+extern "C" SEXP _stochtree_retain_samples_forest_container_cpp(SEXP forest_samples, SEXP sample_ids) {
+  BEGIN_CPP11
+    retain_samples_forest_container_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<StochTree::ForestContainer>>>(forest_samples), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(sample_ids));
+    return R_NilValue;
+  END_CPP11
+}
+// forest.cpp
 cpp11::writable::doubles_matrix<> predict_forest_cpp(cpp11::external_pointer<StochTree::ForestContainer> forest_samples, cpp11::external_pointer<StochTree::ForestDataset> dataset);
 extern "C" SEXP _stochtree_predict_forest_cpp(SEXP forest_samples, SEXP dataset) {
   BEGIN_CPP11
@@ -1833,6 +1841,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_stochtree_reset_forest_model_cpp",                              (DL_FUNC) &_stochtree_reset_forest_model_cpp,                               5},
     {"_stochtree_reset_rfx_model_cpp",                                 (DL_FUNC) &_stochtree_reset_rfx_model_cpp,                                  3},
     {"_stochtree_reset_rfx_tracker_cpp",                               (DL_FUNC) &_stochtree_reset_rfx_tracker_cpp,                                4},
+    {"_stochtree_retain_samples_forest_container_cpp",                 (DL_FUNC) &_stochtree_retain_samples_forest_container_cpp,                  2},
     {"_stochtree_rfx_container_append_from_json_cpp",                  (DL_FUNC) &_stochtree_rfx_container_append_from_json_cpp,                   3},
     {"_stochtree_rfx_container_append_from_json_string_cpp",           (DL_FUNC) &_stochtree_rfx_container_append_from_json_string_cpp,            3},
     {"_stochtree_rfx_container_cpp",                                   (DL_FUNC) &_stochtree_rfx_container_cpp,                                    2},

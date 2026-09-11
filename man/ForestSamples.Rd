@@ -72,6 +72,7 @@ For tutorials on the "proper" usage of the stochtree's advanced workflow, we pro
 \item \href{#method-ForestSamples-num_split_nodes}{\code{ForestSamples$num_split_nodes()}}
 \item \href{#method-ForestSamples-nodes}{\code{ForestSamples$nodes()}}
 \item \href{#method-ForestSamples-leaves}{\code{ForestSamples$leaves()}}
+\item \href{#method-ForestSamples-retain_samples}{\code{ForestSamples$retain_samples()}}
 \item \href{#method-ForestSamples-delete_sample}{\code{ForestSamples$delete_sample()}}
 }
 }
@@ -1201,10 +1202,27 @@ Indices of leaf nodes
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ForestSamples-retain_samples"></a>}}
+\if{latex}{\out{\hypertarget{method-ForestSamples-retain_samples}{}}}
+\subsection{Method \code{retain_samples()}}{
+Retain only the specified forest samples in one native operation.
+IDs must be strictly increasing, unique, zero-based indices. Empty IDs
+remove all samples. Retained samples keep their order and numerical values;
+this changes the container only, not model-level variance/sample metadata.
+\subsection{Usage}{
+\preformatted{ForestSamples$retain_samples(sample_ids)}
+}
+\subsection{Arguments}{
+\describe{
+\item{\code{sample_ids}}{Strictly increasing zero-based sample indices.}
+}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ForestSamples-delete_sample"></a>}}
 \if{latex}{\out{\hypertarget{method-ForestSamples-delete_sample}{}}}
 \subsection{Method \code{delete_sample()}}{
-Modify the \code{ForestSamples} object by removing the forest sample indexed by `forest_num
+Remove one forest sample from the container.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ForestSamples$delete_sample(forest_num)}\if{html}{\out{</div>}}
 }

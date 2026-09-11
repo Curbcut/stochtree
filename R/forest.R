@@ -965,8 +965,25 @@ ForestSamples <- R6::R6Class(
     },
 
     #' @description
-    #' Modify the ``ForestSamples`` object by removing the forest sample indexed by `forest_num
-    #' @param forest_num Index of the forest to be removed
+    #' Retain only the specified forest samples in one native operation.
+    #' IDs must be strictly increasing, unique, zero-based indices. Empty IDs
+    #' remove all samples. Retained samples keep their order and numerical values;
+    #' this changes the container only, not model-level variance/sample metadata.
+    #' @param sample_ids Strictly increasing zero-based sample indices.
+    retain_samples = function(sample_ids) {
+      if (!is.numeric(sample_ids) || anyNA(sample_ids) ||
+          any(!is.finite(sample_ids)) || any(sample_ids != floor(sample_ids)) ||
+          any(sample_ids < 0) || any(sample_ids >= self$num_samples()) ||
+          is.unsorted(sample_ids, strictly = TRUE)) {
+        stop("Sample IDs must be strictly increasing valid zero-based indices.")
+      }
+      retain_samples_forest_container_cpp(self$forest_container_ptr, as.integer(sample_ids))
+      invisible(NULL)
+    },
+
+    #' @description
+    #' Remove one forest sample from the container.
+    #' @param forest_num Index of the forest to be removed.
     delete_sample = function(forest_num) {
       return(remove_sample_forest_container_cpp(
         self$forest_container_ptr,

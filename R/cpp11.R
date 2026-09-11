@@ -544,6 +544,10 @@ remove_sample_forest_container_cpp <- function(forest_samples, forest_num) {
   invisible(.Call(`_stochtree_remove_sample_forest_container_cpp`, forest_samples, forest_num))
 }
 
+retain_samples_forest_container_cpp <- function(forest_samples, sample_ids) {
+  invisible(.Call(`_stochtree_retain_samples_forest_container_cpp`, forest_samples, sample_ids))
+}
+
 predict_forest_cpp <- function(forest_samples, dataset) {
   .Call(`_stochtree_predict_forest_cpp`, forest_samples, dataset)
 }

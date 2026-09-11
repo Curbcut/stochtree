@@ -1,3 +1,8 @@
+# stochtree 0.4.6.9003
+
+* Add checked `ForestSamples$retain_samples()` for bulk retention of ordered
+  zero-based sample IDs without changing retained forests or sampling.
+
 # stochtree 0.4.6.9002
 
 * Specialize the mean-tree residual update for its add/subtract operation, avoiding per-observation type-erased function calls while retaining traversal, arithmetic order and RNG consumption.

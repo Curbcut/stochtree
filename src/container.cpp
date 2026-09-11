@@ -1,5 +1,6 @@
 /*! Copyright (c) 2024 by stochtree authors */
 #include <Eigen/Dense>
+#include <stdexcept>
 #include <stochtree/container.h>
 #include <stochtree/data.h>
 
@@ -35,6 +36,21 @@ void ForestContainer::CopyFromPreviousSample(int new_sample_id, int previous_sam
 void ForestContainer::DeleteSample(int sample_num) {
   forests_.erase(forests_.begin() + sample_num);
   num_samples_--;
+}
+
+void ForestContainer::RetainSamples(const std::vector<int>& sample_ids) {
+  int previous = -1;
+  for (int id : sample_ids) {
+    if (id <= previous || id >= num_samples_) {
+      throw std::invalid_argument("Sample IDs must be strictly increasing valid zero-based indices.");
+    }
+    previous = id;
+  }
+  std::vector<std::unique_ptr<TreeEnsemble>> retained;
+  retained.reserve(sample_ids.size());
+  for (int id : sample_ids) retained.push_back(std::move(forests_[id]));
+  forests_.swap(retained);
+  num_samples_ = static_cast<int>(sample_ids.size());
 }
 
 void ForestContainer::AddSample(TreeEnsemble& forest) {

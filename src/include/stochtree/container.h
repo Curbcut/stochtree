@@ -75,6 +75,8 @@ class ForestContainer {
    * \param sample_num Index of forest to be deleted.
    */
   void DeleteSample(int sample_num);
+  // Retain strictly increasing sample IDs, preserving order and ownership.
+  void RetainSamples(const std::vector<int>& sample_ids);
   /*!
    * \brief Add a new forest to the container by copying `forest`.
    * 
