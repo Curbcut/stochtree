@@ -1,3 +1,7 @@
+# stochtree 0.4.6.9002
+
+* Specialize the mean-tree residual update for its add/subtract operation, avoiding per-observation type-erased function calls while retaining traversal, arithmetic order and RNG consumption.
+
 # stochtree 0.4.6.9000
 
 # stochtree 0.4.5

@@ -300,8 +300,11 @@ static inline void UpdateResidualNewOutcome(ForestTracker& tracker, ColumnVector
   }
 }
 
+// Specialize the plus/minus operation at the call site so each observation
+// does not dispatch through std::function. Keep traversal and arithmetic order.
+template <typename BinaryOp>
 static inline void UpdateMeanModelTree(ForestTracker& tracker, ForestDataset& dataset, ColumnVector& residual, Tree* tree, int tree_num, 
-                                      bool requires_basis, std::function<double(double, double)> op, bool tree_new) {
+                                      bool requires_basis, BinaryOp op, bool tree_new) {
   data_size_t n = dataset.GetCovariates().rows();
   double pred_value;
   int32_t leaf_pred;
