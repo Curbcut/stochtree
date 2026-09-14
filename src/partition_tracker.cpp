@@ -369,7 +369,18 @@ void FeatureUnsortedPartition::ReconstituteFromTree(Tree& tree, ForestDataset& d
   data_size_t num_true, num_false;
   TreeSplit split_rule;
   int split_index;
-  for (int i = 0; i < num_nodes_; i++) {
+  // Recycled node IDs need not increase from parent to child.
+  std::vector<int> traversal;
+  for (int i = 0; i < num_nodes_; ++i) if (tree.IsDeleted(i)) traversal.push_back(i);
+  std::vector<int> pending{0};
+  while (!pending.empty()) {
+    int node = pending.back(); pending.pop_back(); traversal.push_back(node);
+    if (!tree.IsLeaf(node)) {
+      pending.push_back(tree.RightChild(node));
+      pending.push_back(tree.LeftChild(node));
+    }
+  }
+  for (int i : traversal) {
     is_deleted = tree.IsDeleted(i);
     if (is_deleted) {
       deleted_nodes_.push_back(i);

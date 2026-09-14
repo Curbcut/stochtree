@@ -39,3 +39,16 @@ with descending single-sample deletion and invalid-input nonmutation are tested.
 An isolated actual 1,000-sample/64-retained NASH candidate measured 6 ms for bulk
 retention versus 8–9 ms for the old loop, with identical compact model JSON.
 This bounded result is not a full-fit speedup or native RSS measurement.
+
+## Causal sampler correctness (0.4.6.9006)
+
+Based on the complete NASH pin be00e7689f78fa565bab1b6bdbb1a887b8c332cb.
+Preserves all earlier NASH fixes and forest-retention features.
+
+* Correct the Gaussian random-effects inverse-gamma conditional to
+  shape a + J/2 and scale b + sum(xi^2)/2 (upstream-source fix 55551c88).
+* Reconstruct tree partitions in parent-before-child order, including when
+  MCMC prune/grow operations recycle node IDs. Preserve deleted-node bookkeeping.
+
+These are correctness fixes, not evidence of posterior convergence.
+Regression evidence is included in inst/nash-correctness.
