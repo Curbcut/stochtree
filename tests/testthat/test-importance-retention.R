@@ -49,7 +49,6 @@ test_that("importance output stores only initialization forests and rejects pred
 test_that("unsupported importance policies fail before altering the RNG", {
   x <- matrix(seq_len(80) / 80, 40, 2); y <- x[, 1]
   variants <- list(list(X_test = x), list(leaf_basis_train = x),
-    list(rfx_group_ids_train = rep(1:2, 20)),
     list(variance_forest_params = list(num_trees = 2)),
     list(general_params = list(num_chains = 2, random_seed = 3)),
     list(previous_model_json = "invalid"),
@@ -61,4 +60,25 @@ test_that("unsupported importance policies fail before altering the RNG", {
     expect_identical(.Random.seed, before)
   }
   expect_error(bart(x, y, forest_retention = "typo"), "arg")
+})
+
+test_that("importance retention keeps split counts with random effects", {
+  set.seed(915)
+  x <- data.frame(a = rnorm(60), b = runif(60))
+  g <- rep(letters[1:3], each = 20)
+  y <- x$a + rep(c(-3, 0, 3), each = 20) + rnorm(60, 0, 0.5)
+  args <- list(X_train = x, y_train = y, rfx_group_ids_train = g,
+    num_gfr = 0, num_burnin = 4, num_mcmc = 8,
+    general_params = list(random_seed = 11),
+    random_effects_params = list(model_spec = "intercept_only"),
+    mean_forest_params = list(num_trees = 4))
+  set.seed(3); full <- do.call(bart, args); full_rng <- .Random.seed
+  set.seed(3); compact <- do.call(bart, c(args, list(forest_retention = "importance")))
+  expect_identical(.Random.seed, full_rng)
+  expect_s3_class(compact, "bartimportance")
+  expect_null(compact$mean_forests)
+  expect_identical(compact$split_counts,
+    full$mean_forests$get_aggregate_split_counts(length(compact$split_counts)))
+  expect_true(compact$model_params$has_rfx)
+  expect_identical(compact$rfx_preds_train, full$rfx_preds_train)
 })

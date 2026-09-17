@@ -103,8 +103,10 @@ NULL
 #' and full test means when `X_test` is supplied. Use
 #' [sampleBARTSelectedPosteriorPredictive()] for all-iteration test scoring.
 #' Only single-chain Gaussian constant-leaf mean forests without retained warmup,
-#' random effects, variance forests or previous-model initialization are supported.
-#' Cannot be combined with importance retention. Default `NULL` keeps existing behavior.
+#' variance forests or previous-model initialization are supported. Random
+#' effects are supported: the retained samples of the random effects container
+#' are kept alongside the selected forests. Cannot be combined with importance
+#' retention. Default `NULL` keeps existing behavior.
 #' @param forest_retention Forest output policy: `"all"` (default) retains the usual model.
 #' `"importance"` accumulates aggregate mean-forest split counts across exactly
 #' the retained iterations, without retaining posterior forests. It returns a
@@ -112,9 +114,11 @@ NULL
 #' and metadata. Counts follow the processed covariate ordering. All sampling,
 #' burn-in and thinning transitions still run. GFR forests are temporarily kept
 #' for chain initialization. This mode currently supports single-chain Gaussian
-#' constant-leaf mean forests without test data, random effects, variance forests
-#' or previous-model initialization. It cannot predict new data, serve as a
-#' warm-start model or be saved with the BART model JSON functions.
+#' constant-leaf mean forests without test data, variance forests or
+#' previous-model initialization. Random effects are supported: they are sampled
+#' as usual, so the split counts are conditional on them. It cannot predict new
+#' data, serve as a warm-start model or be saved with the BART model JSON
+#' functions.
 #' @param previous_model_json (Optional) JSON string containing a previous BART model. This can be used to "continue" a sampler interactively after inspecting the samples or to run parallel chains "warm-started" from existing forest samples. Default: `NULL`.
 #' @param previous_model_warmstart_sample_num (Optional) Sample number from `previous_model_json` that will be used to warmstart this BART sampler. One-indexed (so that the first sample is used for warm-start by setting `previous_model_warmstart_sample_num = 1`). Default: `NULL`.  If `num_chains` in the `general_params` list is > 1, then each successive chain will be initialized from a different sample, counting backwards from `previous_model_warmstart_sample_num`. That is, if `previous_model_warmstart_sample_num = 10` and `num_chains = 4`, then chain 1 will be initialized from sample 10, chain 2 from sample 9, chain 3 from sample 8, and chain 4 from sample 7. If `previous_model_json` is provided but `previous_model_warmstart_sample_num` is NULL, the last sample in the previous model will be used to initialize the first chain, counting backwards as noted before. If more chains are requested than there are samples in `previous_model_json`, a warning will be raised and only the last sample will be used.
 #' @param general_params (Optional) A list of general (non-forest-specific) model parameters, each of which has a default value processed internally, so this argument list is optional.
@@ -175,6 +179,7 @@ NULL
 #'   - `group_parameter_prior_cov` Prior covariance matrix for the random effects "group parameters." Default: `NULL`. Must be a square matrix whose dimension matches the number of random effects bases, or a scalar value that will be expanded to a diagonal matrix.
 #'   - `variance_prior_shape` Shape parameter for the inverse gamma prior on the variance of the random effects "group parameter." Default: `1`.
 #'   - `variance_prior_scale` Scale parameter for the inverse gamma prior on the variance of the random effects "group parameter." Default: `1`.
+#'   - `unseen_groups` How prediction handles group labels that were not present in `rfx_group_ids_train`. `"error"` (the default) stops, as in previous versions. `"mean"` gives those rows the posterior mean random effect across the sampled groups, draw by draw, which is a population-average prediction for an unseen group. The choice is stored with the model and honoured by `predict()`, the posterior predictive samplers and test-set predictions.
 #'
 #' @return List of sampling outputs and a wrapper around the sampled forests (which can be used for in-memory prediction on new data, or serialized to JSON on disk).
 #' @export
@@ -304,7 +309,8 @@ bart <- function(
     working_parameter_prior_cov = NULL,
     group_parameter_prior_cov = NULL,
     variance_prior_shape = 1,
-    variance_prior_scale = 1
+    variance_prior_scale = 1,
+    unseen_groups = "error"
   )
   rfx_params_updated <- preprocessParams(
     rfx_params_default,
@@ -368,17 +374,20 @@ bart <- function(
   rfx_group_parameter_prior_cov <- rfx_params_updated$group_parameter_prior_cov
   rfx_variance_prior_shape <- rfx_params_updated$variance_prior_shape
   rfx_variance_prior_scale <- rfx_params_updated$variance_prior_scale
+  rfx_unseen_groups <- validateRfxUnseenGroups(
+    rfx_params_updated$unseen_groups
+  )
 
-  # Validate before changing RNG state or allocating sampler objects.
+  # Validate before changing RNG state or allocating sampler objects. Random
+  # effects are compatible with both retention modes: they are sampled as usual
+  # and only the retained forests or posterior samples are kept.
   if (importance_only && (!identical(outcome_model$outcome, "continuous") ||
       !identical(outcome_model$link, "identity") || isTRUE(probit_outcome_model) ||
       num_chains != 1 || num_trees_mean <= 0 || num_trees_variance != 0 ||
       !is.null(X_test) || !is.null(leaf_basis_train) || !is.null(leaf_basis_test) ||
-      !is.null(rfx_group_ids_train) || !is.null(rfx_group_ids_test) ||
-      !is.null(rfx_basis_train) || !is.null(rfx_basis_test) ||
       !is.null(previous_model_json) || !is.null(previous_model_warmstart_sample_num))) {
     stop(paste("Importance retention requires a single-chain Gaussian constant-leaf",
-      "mean forest without test data, random effects, variance forests or previous-model initialization."))
+      "mean forest without test data, variance forests or previous-model initialization."))
   }
 
   if (selected_only) {
@@ -387,10 +396,8 @@ bart <- function(
         num_chains != 1 || num_trees_mean <= 0 || num_trees_variance != 0 ||
         isTRUE(keep_gfr) || isTRUE(keep_burnin) || num_mcmc < 1 ||
         !is.null(leaf_basis_train) || !is.null(leaf_basis_test) ||
-        !is.null(rfx_group_ids_train) || !is.null(rfx_group_ids_test) ||
-        !is.null(rfx_basis_train) || !is.null(rfx_basis_test) ||
         !is.null(previous_model_json) || !is.null(previous_model_warmstart_sample_num)) {
-      stop("Selected retention requires a single-chain Gaussian constant-leaf mean forest, no retained warmup, and no random effects, variance forest or previous model.")
+      stop("Selected retention requires a single-chain Gaussian constant-leaf mean forest, no retained warmup, and no variance forest or previous model.")
     }
     if (!is.numeric(retained_sample_ids) || !length(retained_sample_ids) ||
         anyNA(retained_sample_ids) || any(!is.finite(retained_sample_ids)) ||
@@ -925,7 +932,10 @@ bart <- function(
         rfx_group_ids_test,
         levels = levels(group_ids_factor)
       )
-      if (sum(is.na(group_ids_factor_test)) > 0) {
+      if (
+        sum(is.na(group_ids_factor_test)) > 0 &&
+          identical(rfx_unseen_groups, "error")
+      ) {
         stop(
           "All random effect group labels provided in rfx_group_ids_test must be present in rfx_group_ids_train"
         )
@@ -2432,9 +2442,12 @@ bart <- function(
     y_hat_train <- y_hat_train + rfx_preds_train
   }
   if ((has_rfx_test) && (has_test)) {
-    rfx_preds_test <- rfx_samples$predict(
-      rfx_group_ids_test,
-      rfx_basis_test
+    rfx_preds_test <- predictRandomEffectsForLabels(
+      rfx_samples,
+      group_ids_factor_test,
+      rfx_basis_test,
+      unseen_groups = rfx_unseen_groups,
+      label = "rfx_group_ids_test"
     ) *
       y_std_train
     y_hat_test <- y_hat_test + rfx_preds_test
@@ -2522,7 +2535,8 @@ bart <- function(
       cloglog_num_categories,
       0
     ),
-    "rfx_model_spec" = rfx_model_spec
+    "rfx_model_spec" = rfx_model_spec,
+    "rfx_unseen_groups" = rfx_unseen_groups
   )
   result <- list(
     "model_params" = model_params,
@@ -2575,6 +2589,13 @@ bart <- function(
     compact_model$y_hat_test <- NULL
     if (sample_sigma2_global) compact_model$sigma2_global_samples <- result$sigma2_global_samples[keep]
     if (sample_sigma2_leaf) compact_model$sigma2_leaf_samples <- result$sigma2_leaf_samples[keep]
+    if (has_rfx) {
+      # The sample container is shared with `result`, whose train and test
+      # predictions are already materialized as matrices above, so the retained
+      # draws are all the compact model needs.
+      compact_model$rfx_preds_train <- as.matrix(result$rfx_preds_train)[, keep, drop = FALSE]
+      compact_model$rfx_samples$retain_samples(retained_sample_ids)
+    }
     compact_model$model_params$num_samples <- length(keep)
     result$mean_forests <- NULL
     result$model <- compact_model
@@ -2804,11 +2825,22 @@ predict.bartmodel <- function(
   train_set_metadata <- object$train_set_metadata
   X <- preprocessPredictionData(X, train_set_metadata)
 
+  # Unseen group labels either stop the prediction or take the posterior mean
+  # random effect across the sampled groups, depending on how the model was
+  # sampled. Models serialized before this option default to "error".
+  rfx_unseen_groups <- validateRfxUnseenGroups(
+    object$model_params[["rfx_unseen_groups"]]
+  )
+
   # Recode group IDs to integer vector (if passed as, for example, a vector of county names, etc...)
+  group_ids_factor <- NULL
   if (!is.null(rfx_group_ids)) {
     rfx_unique_group_ids <- object$rfx_unique_group_ids
     group_ids_factor <- factor(rfx_group_ids, levels = rfx_unique_group_ids)
-    if (sum(is.na(group_ids_factor)) > 0) {
+    if (
+      sum(is.na(group_ids_factor)) > 0 &&
+        identical(rfx_unseen_groups, "error")
+    ) {
       stop(
         "All random effect group labels provided in rfx_group_ids must have been present in rfx_group_ids_train"
       )
@@ -2879,9 +2911,11 @@ predict.bartmodel <- function(
   # Compute rfx predictions (if needed)
   if (predict_rfx || predict_rfx_intermediate) {
     if (!is.null(rfx_basis)) {
-      rfx_predictions <- object$rfx_samples$predict(
-        rfx_group_ids,
-        rfx_basis
+      rfx_predictions <- predictRandomEffectsForLabels(
+        object$rfx_samples,
+        group_ids_factor,
+        rfx_basis,
+        unseen_groups = rfx_unseen_groups
       ) *
         y_std
     } else {
@@ -3732,6 +3766,10 @@ saveBARTModelToJson <- function(object) {
     "rfx_model_spec",
     object$model_params$rfx_model_spec
   )
+  jsonobj$add_string(
+    "rfx_unseen_groups",
+    validateRfxUnseenGroups(object$model_params[["rfx_unseen_groups"]])
+  )
   if (object$model_params$outcome_model$link == "cloglog") {
     jsonobj$add_scalar(
       "cloglog_num_categories",
@@ -4009,6 +4047,14 @@ createBARTModelFromJson <- function(json_object) {
         "). Defaulting to ''. Re-save your model to suppress this warning."
       ))
     }
+  }
+  if (has_field("rfx_unseen_groups")) {
+    model_params[["rfx_unseen_groups"]] <- json_object$get_string(
+      "rfx_unseen_groups"
+    )
+  } else {
+    # Models serialized before this option always refused unseen group labels.
+    model_params[["rfx_unseen_groups"]] <- "error"
   }
   if (model_params[["outcome_model"]]$link == "cloglog") {
     cloglog_num_categories <- json_object$get_scalar("cloglog_num_categories")
@@ -4303,6 +4349,14 @@ createBARTModelFromCombinedJson <- function(json_object_list) {
         "). Defaulting to ''. Re-save your model to suppress this warning."
       ))
     }
+  }
+  if (has_field("rfx_unseen_groups")) {
+    model_params[["rfx_unseen_groups"]] <- json_object_default$get_string(
+      "rfx_unseen_groups"
+    )
+  } else {
+    # Models serialized before this option always refused unseen group labels.
+    model_params[["rfx_unseen_groups"]] <- "error"
   }
 
   if (has_field("num_chains")) {
@@ -4654,6 +4708,14 @@ createBARTModelFromCombinedJsonString <- function(json_string_list) {
         "). Defaulting to ''. Re-save your model to suppress this warning."
       ))
     }
+  }
+  if (has_field("rfx_unseen_groups")) {
+    model_params[["rfx_unseen_groups"]] <- json_object_default$get_string(
+      "rfx_unseen_groups"
+    )
+  } else {
+    # Models serialized before this option always refused unseen group labels.
+    model_params[["rfx_unseen_groups"]] <- "error"
   }
 
   if (has_field("num_chains")) {

@@ -303,6 +303,33 @@ RandomEffectSamples <- R6::R6Class(
     },
 
     #' @description
+    #' Modify the `RandomEffectsSamples` object in place so that it retains only
+    #' the samples indexed by `sample_ids`, dropping every other sample. This is
+    #' the random effects counterpart of retaining a subset of sampled forests.
+    #' @param sample_ids Zero-based indices of the RFX samples to retain
+    #' @return NULL, called for the side effect on the sample container
+    retain_samples = function(sample_ids) {
+      num_samples <- rfx_container_num_samples_cpp(self$rfx_container_ptr)
+      sample_ids <- sort(unique(as.integer(sample_ids)))
+      if (
+        length(sample_ids) == 0 ||
+          anyNA(sample_ids) ||
+          any(sample_ids < 0) ||
+          any(sample_ids >= num_samples)
+      ) {
+        stop(
+          "sample_ids must be non-empty, zero-based indices of existing RFX samples"
+        )
+      }
+      # Delete from the back so that the remaining indices stay valid.
+      drop_ids <- setdiff(seq_len(num_samples) - 1L, sample_ids)
+      for (sample_num in rev(drop_ids)) {
+        rfx_container_delete_sample_cpp(self$rfx_container_ptr, sample_num)
+      }
+      invisible(NULL)
+    },
+
+    #' @description
     #' Convert the mapping of group IDs to random effect components indices from C++ to R native format
     #' @return List mapping group ID to random effect components.
     extract_label_mapping = function() {
@@ -735,4 +762,97 @@ print.RandomEffectSamples <- function(x, ...) {
 
   # Return random effects container invisibly
   invisible(x)
+}
+
+
+#' Validate a random effects unseen-group policy
+#'
+#' @param unseen_groups Either "error" (the default, which refuses group labels
+#'   that were not sampled) or "mean" (which gives such rows the posterior mean
+#'   random effect across the sampled groups).
+#' @return The validated policy string.
+#' @noRd
+validateRfxUnseenGroups <- function(unseen_groups) {
+  if (is.null(unseen_groups)) {
+    return("error")
+  }
+  if (
+    !is.character(unseen_groups) ||
+      length(unseen_groups) != 1 ||
+      is.na(unseen_groups) ||
+      !(unseen_groups %in% c("error", "mean"))
+  ) {
+    stop("random_effects_params$unseen_groups must be 'error' or 'mean'")
+  }
+  unseen_groups
+}
+
+
+#' Random effect draws for rows whose group was never sampled
+#'
+#' Averages the group parameters across sampled groups, draw by draw, and
+#' applies the supplied basis. For an intercept-only model this is the mean
+#' group intercept in every posterior draw.
+#'
+#' @param rfx_samples A `RandomEffectSamples` object.
+#' @param rfx_basis Basis rows for the observations being predicted.
+#' @return Matrix with `nrow(rfx_basis)` rows and one column per posterior draw.
+#' @noRd
+rfxUnseenGroupMeanDraws <- function(rfx_samples, rfx_basis) {
+  beta_samples <- rfx_samples$extract_parameter_samples()$beta_samples
+  if (length(dim(beta_samples)) == 2) {
+    # One component: the container returns (num_groups, num_samples).
+    dim(beta_samples) <- c(1, dim(beta_samples))
+  }
+  # Mean over groups for every component and posterior draw.
+  mean_beta <- apply(beta_samples, c(1, 3), mean)
+  if (is.null(dim(mean_beta))) {
+    dim(mean_beta) <- c(1, length(mean_beta))
+  }
+  as.matrix(rfx_basis) %*% mean_beta
+}
+
+
+#' Predict random effects for group labels that may be unseen
+#'
+#' @param rfx_samples A `RandomEffectSamples` object.
+#' @param group_ids_factor Prediction group labels as a factor whose levels are
+#'   the training group labels, so that unseen labels are `NA`.
+#' @param rfx_basis Basis rows for the observations being predicted.
+#' @param unseen_groups Policy for unseen labels, "error" or "mean".
+#' @param label Name of the argument to quote in the error message.
+#' @return Matrix with one row per observation and one column per posterior draw.
+#' @noRd
+predictRandomEffectsForLabels <- function(
+  rfx_samples,
+  group_ids_factor,
+  rfx_basis,
+  unseen_groups = "error",
+  label = "rfx_group_ids"
+) {
+  unseen_groups <- validateRfxUnseenGroups(unseen_groups)
+  group_ids <- as.integer(group_ids_factor)
+  unseen <- is.na(group_ids)
+  if (any(unseen)) {
+    if (unseen_groups == "error") {
+      stop(paste0(
+        "All random effect group labels provided in ",
+        label,
+        " must have been present in rfx_group_ids_train"
+      ))
+    }
+    if (all(unseen)) {
+      return(rfxUnseenGroupMeanDraws(rfx_samples, rfx_basis))
+    }
+    # Any sampled group works as a placeholder: those rows are overwritten.
+    group_ids[unseen] <- group_ids[!unseen][1]
+  }
+  predictions <- rfx_samples$predict(group_ids, rfx_basis)
+  if (any(unseen)) {
+    predictions[unseen, ] <- rfxUnseenGroupMeanDraws(
+      rfx_samples,
+      as.matrix(rfx_basis)[unseen, , drop = FALSE]
+    )
+  }
+  predictions
 }

@@ -74,27 +74,6 @@ referred to internally in the C++ layer as "variance weights" (\code{var_weights
 
 \item{num_mcmc}{Number of "retained" iterations of the MCMC sampler. Default: 100.}
 
-\item{retained_sample_ids}{Optional strictly increasing unique zero-based posterior
-sample IDs. All iterations still run. Returns a \code{bartselected} bundle whose
-\code{model} is an ordinary BART model containing only the selected forests and
-matching training/variance samples. The outer bundle retains full training and
-variance samples and full test means when \code{X_test} is supplied. Use
-\code{sampleBARTSelectedPosteriorPredictive()} for all-iteration test scoring.
-Only single-chain Gaussian constant-leaf mean forests without retained warmup,
-random effects, variance forests or previous-model initialization are supported.
-Cannot be combined with importance retention. Default \code{NULL} keeps existing behavior.}
-
-\item{forest_retention}{Forest output policy: \code{"all"} (default) retains the usual model.
-\code{"importance"} accumulates aggregate mean-forest split counts across exactly
-the retained iterations, without retaining posterior forests. It returns a
-\code{bartimportance} summary with \code{split_counts}, training draws, variance draws
-and metadata. Counts follow the processed covariate ordering. All sampling,
-burn-in and thinning transitions still run. GFR forests are temporarily kept
-for chain initialization. This mode currently supports single-chain Gaussian
-constant-leaf mean forests without test data, random effects, variance forests
-or previous-model initialization. It cannot predict new data, serve as a
-warm-start model or be saved with the BART model JSON functions.}
-
 \item{previous_model_json}{(Optional) JSON string containing a previous BART model. This can be used to "continue" a sampler interactively after inspecting the samples or to run parallel chains "warm-started" from existing forest samples. Default: \code{NULL}.}
 
 \item{previous_model_warmstart_sample_num}{(Optional) Sample number from \code{previous_model_json} that will be used to warmstart this BART sampler. One-indexed (so that the first sample is used for warm-start by setting \code{previous_model_warmstart_sample_num = 1}). Default: \code{NULL}.  If \code{num_chains} in the \code{general_params} list is > 1, then each successive chain will be initialized from a different sample, counting backwards from \code{previous_model_warmstart_sample_num}. That is, if \code{previous_model_warmstart_sample_num = 10} and \code{num_chains = 4}, then chain 1 will be initialized from sample 10, chain 2 from sample 9, chain 3 from sample 8, and chain 4 from sample 7. If \code{previous_model_json} is provided but \code{previous_model_warmstart_sample_num} is NULL, the last sample in the previous model will be used to initialize the first chain, counting backwards as noted before. If more chains are requested than there are samples in \code{previous_model_json}, a warning will be raised and only the last sample will be used.}
@@ -116,7 +95,7 @@ warm-start model or be saved with the BART model JSON functions.}
 \item \code{verbose} Whether or not to print progress during the sampling loops. Default: \code{FALSE}.
 \item \code{outcome_model} A structured \code{OutcomeModel} object that specifies the outcome type and desired link function. This argument pre-empts the legacy (deprecated) \code{probit_outcome_model} option. Default: \code{OutcomeModel(outcome='continuous', link='identity')}.
 \item \code{probit_outcome_model} Deprecated in favor of \code{outcome_model}. Whether or not the outcome should be modeled as explicitly binary via a probit link. If \code{TRUE}, \code{y} must only contain the values \code{0} and \code{1}. Default: \code{FALSE}.
-\item \code{num_threads} Number of threads to use in the GFR and MCMC algorithms, as well as prediction. If OpenMP is not available on a user's setup, this will default to \code{1}, otherwise to the maximum number of available threads.
+\item \code{num_threads} Number of threads to use in the GFR and MCMC algorithms, as well as prediction. Defaults to \code{1} (single-threaded). Set to \code{-1} to use the maximum number of available threads, or a positive integer for a specific count. OpenMP must be available for values other than \code{1}.
 }}
 
 \item{mean_forest_params}{(Optional) A list of mean forest model parameters, each of which has a default value processed internally, so this argument list is optional.
@@ -160,7 +139,33 @@ warm-start model or be saved with the BART model JSON functions.}
 \item \code{group_parameter_prior_cov} Prior covariance matrix for the random effects "group parameters." Default: \code{NULL}. Must be a square matrix whose dimension matches the number of random effects bases, or a scalar value that will be expanded to a diagonal matrix.
 \item \code{variance_prior_shape} Shape parameter for the inverse gamma prior on the variance of the random effects "group parameter." Default: \code{1}.
 \item \code{variance_prior_scale} Scale parameter for the inverse gamma prior on the variance of the random effects "group parameter." Default: \code{1}.
+\item \code{unseen_groups} How prediction handles group labels that were not present in \code{rfx_group_ids_train}. \code{"error"} (the default) stops, as in previous versions. \code{"mean"} gives those rows the posterior mean random effect across the sampled groups, draw by draw, which is a population-average prediction for an unseen group. The choice is stored with the model and honoured by \code{predict()}, the posterior predictive samplers and test-set predictions.
 }}
+
+\item{forest_retention}{Forest output policy: \code{"all"} (default) retains the usual model.
+\code{"importance"} accumulates aggregate mean-forest split counts across exactly
+the retained iterations, without retaining posterior forests. It returns a
+\code{bartimportance} summary with \code{split_counts}, training draws, variance draws
+and metadata. Counts follow the processed covariate ordering. All sampling,
+burn-in and thinning transitions still run. GFR forests are temporarily kept
+for chain initialization. This mode currently supports single-chain Gaussian
+constant-leaf mean forests without test data, variance forests or
+previous-model initialization. Random effects are supported: they are sampled
+as usual, so the split counts are conditional on them. It cannot predict new
+data, serve as a warm-start model or be saved with the BART model JSON
+functions.}
+
+\item{retained_sample_ids}{Optional strictly increasing unique zero-based posterior
+sample IDs. Sampling still runs every iteration. Returns a \code{bartselected} bundle:
+\code{model} is an ordinary BART model containing only these forests and matching
+training/variance samples; the outer bundle retains full training/variance draws
+and full test means when \code{X_test} is supplied. Use
+\code{\link[=sampleBARTSelectedPosteriorPredictive]{sampleBARTSelectedPosteriorPredictive()}} for all-iteration test scoring.
+Only single-chain Gaussian constant-leaf mean forests without retained warmup,
+variance forests or previous-model initialization are supported. Random
+effects are supported: the retained samples of the random effects container
+are kept alongside the selected forests. Cannot be combined with importance
+retention. Default \code{NULL} keeps existing behavior.}
 }
 \value{
 List of sampling outputs and a wrapper around the sampled forests (which can be used for in-memory prediction on new data, or serialized to JSON on disk).

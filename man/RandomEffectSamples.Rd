@@ -40,6 +40,7 @@ needed for prediction / serialization
 \item \href{#method-RandomEffectSamples-predict}{\code{RandomEffectSamples$predict()}}
 \item \href{#method-RandomEffectSamples-extract_parameter_samples}{\code{RandomEffectSamples$extract_parameter_samples()}}
 \item \href{#method-RandomEffectSamples-delete_sample}{\code{RandomEffectSamples$delete_sample()}}
+\item \href{#method-RandomEffectSamples-retain_samples}{\code{RandomEffectSamples$retain_samples()}}
 \item \href{#method-RandomEffectSamples-extract_label_mapping}{\code{RandomEffectSamples$extract_label_mapping()}}
 \item \href{#method-RandomEffectSamples-num_samples}{\code{RandomEffectSamples$num_samples()}}
 \item \href{#method-RandomEffectSamples-num_components}{\code{RandomEffectSamples$num_components()}}
@@ -268,6 +269,28 @@ Modify the \code{RandomEffectsSamples} object by removing the parameter samples 
 \item{\code{sample_num}}{Index of the RFX sample to be removed}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RandomEffectSamples-retain_samples"></a>}}
+\if{latex}{\out{\hypertarget{method-RandomEffectSamples-retain_samples}{}}}
+\subsection{Method \code{retain_samples()}}{
+Modify the \code{RandomEffectsSamples} object in place so that it retains only
+the samples indexed by \code{sample_ids}, dropping every other sample. This is
+the random effects counterpart of retaining a subset of sampled forests.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RandomEffectSamples$retain_samples(sample_ids)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{sample_ids}}{Zero-based indices of the RFX samples to retain}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+NULL, called for the side effect on the sample container
 }
 }
 \if{html}{\out{<hr>}}

@@ -64,3 +64,30 @@ test_that("selected retention supports single samples, fixed variance and observ
     expect_equal(dim(selected$model$y_hat_train), c(40, 1))
   }
 })
+
+test_that("selected retention keeps the matching random effects samples", {
+  set.seed(916)
+  x <- data.frame(a = rnorm(60), b = runif(60))
+  g <- rep(letters[1:3], each = 20)
+  y <- x$a + rep(c(-3, 0, 3), each = 20) + rnorm(60, 0, 0.5)
+  keep <- c(0L, 3L, 7L)
+  args <- list(X_train = x, y_train = y, X_test = x, rfx_group_ids_train = g,
+    rfx_group_ids_test = g, num_gfr = 0, num_burnin = 4, num_mcmc = 8,
+    general_params = list(random_seed = 12),
+    random_effects_params = list(model_spec = "intercept_only"),
+    mean_forest_params = list(num_trees = 4))
+  set.seed(4); full <- do.call(bart, args)
+  set.seed(4); selected <- do.call(bart, c(args, list(retained_sample_ids = keep)))
+  expect_s3_class(selected, "bartselected")
+  # The full result keeps every scoring draw, including the random effects.
+  expect_equal(ncol(selected$y_hat_test), ncol(full$y_hat_test))
+  expect_equal(selected$y_hat_test, full$y_hat_test)
+  compact <- selected$model
+  expect_equal(compact$model_params$num_samples, length(keep))
+  expect_equal(compact$rfx_samples$num_samples(), length(keep))
+  expect_equal(compact$rfx_preds_train,
+    as.matrix(full$rfx_preds_train)[, keep + 1L, drop = FALSE])
+  expect_equal(unname(predict(compact, X = x, rfx_group_ids = g,
+    type = "posterior", terms = "rfx")),
+    unname(as.matrix(full$rfx_preds_train)[, keep + 1L, drop = FALSE]))
+})

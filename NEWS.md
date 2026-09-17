@@ -1,3 +1,18 @@
+# stochtree 0.4.6.9007
+
+* Random effects work with both retention modes. `forest_retention =
+  "importance"` samples them as usual and keeps only the split counts, which are
+  therefore conditional on the random effects, and `retained_sample_ids` keeps
+  the matching random effects samples alongside the selected forests, through a
+  new checked `RandomEffectSamples$retain_samples()`.
+
+* `random_effects_params$unseen_groups` chooses what prediction does with group
+  labels that were not sampled. `"error"` (the default) stops, as before.
+  `"mean"` gives those rows the posterior mean random effect across the sampled
+  groups, draw by draw, which is a population-average prediction for an unseen
+  group. The choice is stored with the model and serialized, and `predict()`,
+  the posterior predictive samplers and test-set predictions all honour it.
+
 # stochtree 0.4.6.9003
 
 * Add checked `ForestSamples$retain_samples()` for bulk retention of ordered
