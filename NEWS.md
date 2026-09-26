@@ -1,3 +1,10 @@
+# stochtree 0.4.6.9008
+
+* Importance-only BART no longer allocates or returns training prediction draws
+  (`y_hat_train` or `rfx_preds_train`). Sampling, split counts, variance draws,
+  and retained random-effects parameters are unchanged. This removes
+  observation-by-draw buffers and their prediction/transformation copies.
+
 # stochtree 0.4.6.9007
 
 * Random effects work with both retention modes. `forest_retention =

@@ -110,9 +110,10 @@ NULL
 #' @param forest_retention Forest output policy: `"all"` (default) retains the usual model.
 #' `"importance"` accumulates aggregate mean-forest split counts across exactly
 #' the retained iterations, without retaining posterior forests. It returns a
-#' `bartimportance` summary with `split_counts`, training draws, variance draws
-#' and metadata. Counts follow the processed covariate ordering. All sampling,
-#' burn-in and thinning transitions still run. GFR forests are temporarily kept
+#' `bartimportance` summary with `split_counts`, variance draws and metadata.
+#' Training predictions (`y_hat_train` and `rfx_preds_train`) are neither
+#' allocated nor returned in this mode. Counts follow the processed covariate ordering.
+#' All sampling, burn-in and thinning transitions still run. GFR forests are temporarily kept
 #' for chain initialization. This mode currently supports single-chain Gaussian
 #' constant-leaf mean forests without test data, variance forests or
 #' previous-model initialization. Random effects are supported: they are sampled
@@ -1543,7 +1544,8 @@ bart <- function(
       num_retained_samples
     )
   }
-  if (include_mean_forest) {
+  # Importance needs sampler state, but no observation-by-draw output buffer.
+  if (include_mean_forest && !importance_only) {
     mean_forest_pred_train <- matrix(
       NA_real_,
       nrow(X_train),
@@ -1711,7 +1713,7 @@ bart <- function(
         }
 
         # Cache train set predictions since they are already computed during sampling
-        if (keep_sample) {
+        if (keep_sample && !importance_only) {
           mean_forest_pred_train[,
             sample_counter
           ] <- forest_model_mean$get_cached_forest_predictions()
@@ -2248,7 +2250,7 @@ bart <- function(
           }
 
           # Cache train set predictions since they are already computed during sampling
-          if (keep_sample) {
+          if (keep_sample && !importance_only) {
             mean_forest_pred_train[,
               sample_counter
             ] <- forest_model_mean$get_cached_forest_predictions()
@@ -2379,7 +2381,7 @@ bart <- function(
         rfx_samples$delete_sample(0)
       }
     }
-    if (include_mean_forest) {
+    if (include_mean_forest && !importance_only) {
       mean_forest_pred_train <- mean_forest_pred_train[,
         (num_gfr + 1):ncol(mean_forest_pred_train)
       ]
@@ -2409,7 +2411,7 @@ bart <- function(
   }
 
   # Mean forest predictions
-  if (include_mean_forest) {
+  if (include_mean_forest && !importance_only) {
     # y_hat_train <- forest_samples_mean$predict(forest_dataset_train)*y_std_train + y_bar_train
     y_hat_train <- mean_forest_pred_train * y_std_train + y_bar_train
     if (has_test) {
@@ -2433,7 +2435,7 @@ bart <- function(
   }
 
   # Random effects predictions
-  if (has_rfx) {
+  if (has_rfx && !importance_only) {
     rfx_preds_train <- rfx_samples$predict(
       rfx_group_ids_train,
       rfx_basis_train
@@ -2544,7 +2546,7 @@ bart <- function(
   )
   if (include_mean_forest) {
     result[["mean_forests"]] = forest_samples_mean
-    result[["y_hat_train"]] = y_hat_train
+    if (!importance_only) result[["y_hat_train"]] = y_hat_train
     if (has_test) {
       result[["y_hat_test"]] = y_hat_test
     }
@@ -2565,7 +2567,7 @@ bart <- function(
   }
   if (has_rfx) {
     result[["rfx_samples"]] = rfx_samples
-    result[["rfx_preds_train"]] = rfx_preds_train
+    if (!importance_only) result[["rfx_preds_train"]] = rfx_preds_train
     result[["rfx_unique_group_ids"]] = levels(group_ids_factor)
   }
   if ((has_rfx_test) && (has_test)) {

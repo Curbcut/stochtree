@@ -1,4 +1,4 @@
-test_that("importance retention preserves retained counts, draws and RNG state", {
+test_that("importance retention preserves retained counts, variance draws and RNG state", {
   set.seed(720)
   x <- data.frame(a = rnorm(60), b = runif(60), c = factor(rep(letters[1:3], 20)),
                   d = ordered(rep(1:3, 20)))
@@ -17,7 +17,8 @@ test_that("importance retention preserves retained counts, draws and RNG state",
       expect_null(compact$mean_forests)
       expect_identical(compact$split_counts,
         full$mean_forests$get_aggregate_split_counts(length(compact$split_counts)))
-      for (field in c("y_hat_train", "sigma2_global_samples", "sigma2_leaf_samples",
+      expect_null(compact$y_hat_train)
+      for (field in c("sigma2_global_samples", "sigma2_leaf_samples",
                       "model_params", "train_set_metadata"))
         expect_identical(compact[[field]], full[[field]], info = field)
       expect_identical(unserialize(serialize(compact, NULL)), compact)
@@ -34,7 +35,7 @@ test_that("importance output stores only initialization forests and rejects pred
     mean_forest_params = list(num_trees = 4),
     general_params = list(random_seed = 7), forest_retention = "importance")
   expect_identical(captured[[1L]]$num_samples(), 0L)
-  expect_equal(ncol(fit$y_hat_train), 1000)
+  expect_null(fit$y_hat_train)
   expect_equal(fit$model_params$num_samples, 1000)
   expect_error(predict(fit, X = x), "do not retain forests")
   expect_error(saveBARTModelToJsonString(fit), "must be a BART model")
@@ -80,5 +81,42 @@ test_that("importance retention keeps split counts with random effects", {
   expect_identical(compact$split_counts,
     full$mean_forests$get_aggregate_split_counts(length(compact$split_counts)))
   expect_true(compact$model_params$has_rfx)
-  expect_identical(compact$rfx_preds_train, full$rfx_preds_train)
+  expect_null(compact$y_hat_train)
+  expect_null(compact$rfx_preds_train)
+  expect_identical(compact$rfx_samples$extract_parameter_samples(),
+    full$rfx_samples$extract_parameter_samples())
+  expect_identical(compact$sigma2_global_samples, full$sigma2_global_samples)
+})
+
+test_that("importance retention avoids observation-by-draw R allocations", {
+  skip_if_not(capabilities("profmem"))
+  set.seed(120)
+  n <- 400L
+  draws <- 128L
+  x <- data.frame(a = rnorm(n), b = runif(n))
+  y <- x$a + rnorm(n)
+  profile <- function(args, retention) {
+    path <- tempfile()
+    on.exit(unlink(path), add = TRUE)
+    Rprofmem(path)
+    tryCatch(do.call(bart, c(args, list(forest_retention = retention))),
+      finally = Rprofmem(NULL))
+    lines <- readLines(path)
+    sizes <- as.numeric(sub(" .*", "", lines[grepl("^[0-9]+ ", lines)]))
+    sum(sizes >= 8 * n * draws)
+  }
+  for (rfx in c(FALSE, TRUE)) {
+    args <- list(X_train = x, y_train = y, num_gfr = 0, num_burnin = 2,
+      num_mcmc = draws, general_params = list(random_seed = 14),
+      mean_forest_params = list(num_trees = 2))
+    if (rfx) {
+      args$rfx_group_ids_train <- rep(letters[1:4], each = n / 4)
+      args$random_effects_params <- list(model_spec = "intercept_only")
+    }
+    # Warm R's lazy compilation before measuring either output policy.
+    invisible(do.call(bart, c(args, list(forest_retention = "all"))))
+    invisible(do.call(bart, c(args, list(forest_retention = "importance"))))
+    expect_gte(profile(args, "all"), 2L)
+    expect_equal(profile(args, "importance"), 0L)
+  }
 })

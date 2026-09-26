@@ -145,9 +145,10 @@ referred to internally in the C++ layer as "variance weights" (\code{var_weights
 \item{forest_retention}{Forest output policy: \code{"all"} (default) retains the usual model.
 \code{"importance"} accumulates aggregate mean-forest split counts across exactly
 the retained iterations, without retaining posterior forests. It returns a
-\code{bartimportance} summary with \code{split_counts}, training draws, variance draws
-and metadata. Counts follow the processed covariate ordering. All sampling,
-burn-in and thinning transitions still run. GFR forests are temporarily kept
+\code{bartimportance} summary with \code{split_counts}, variance draws and metadata.
+Training predictions (\code{y_hat_train} and \code{rfx_preds_train}) are neither
+allocated nor returned in this mode. Counts follow the processed covariate ordering.
+All sampling, burn-in and thinning transitions still run. GFR forests are temporarily kept
 for chain initialization. This mode currently supports single-chain Gaussian
 constant-leaf mean forests without test data, variance forests or
 previous-model initialization. Random effects are supported: they are sampled
