@@ -85,3 +85,27 @@ test_that("shared numeric inputs stay shared through binding and BART", {
   invisible(gc())
   unchanged()
 })
+
+
+test_that("outcome summaries and BART preserve shared outcome vectors", {
+  skip_if_not_installed("mori")
+  set.seed(38)
+  y <- mori::share(rnorm(2000))
+  before <- serialize(y, NULL)
+  ordinary <- y[]
+  for (fun in list(sum_cpp, mean_cpp, var_cpp, sd_cpp)) {
+    expect_identical(fun(y), fun(ordinary))
+    expect_identical(serialize(y, NULL), before)
+  }
+  x <- data.frame(x = seq_len(length(y)))
+  fit <- function(outcome) bart(x, outcome, num_gfr = 2, num_burnin = 2,
+    num_mcmc = 5, mean_forest_params = list(num_trees = 3),
+    general_params = list(random_seed = 31, num_threads = 1),
+    forest_retention = "importance")
+  actual <- fit(y)
+  expected <- fit(ordinary)
+  expect_identical(actual$split_counts, expected$split_counts)
+  expect_identical(actual$sigma2_global_samples, expected$sigma2_global_samples)
+  invisible(gc())
+  expect_identical(serialize(y, NULL), before)
+})

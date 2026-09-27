@@ -1,3 +1,8 @@
+# stochtree 0.4.6.9010
+
+* Outcome summaries use read-only pointers, preserving shared ALTREP outcomes
+  during fitting instead of retaining private copies in the input inventory.
+
 # stochtree 0.4.6.9009
 
 * Numeric covariate binding reads ordinary integer and double columns through

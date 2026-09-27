@@ -561,31 +561,31 @@ extern "C" SEXP _stochtree_root_reset_rfx_tracker_cpp(SEXP tracker, SEXP dataset
   END_CPP11
 }
 // R_utils.cpp
-double sum_cpp(cpp11::doubles x);
+double sum_cpp(cpp11::sexp x);
 extern "C" SEXP _stochtree_sum_cpp(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(sum_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(x)));
+    return cpp11::as_sexp(sum_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(x)));
   END_CPP11
 }
 // R_utils.cpp
-double mean_cpp(cpp11::doubles x);
+double mean_cpp(cpp11::sexp x);
 extern "C" SEXP _stochtree_mean_cpp(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(mean_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(x)));
+    return cpp11::as_sexp(mean_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(x)));
   END_CPP11
 }
 // R_utils.cpp
-double var_cpp(cpp11::doubles x);
+double var_cpp(cpp11::sexp x);
 extern "C" SEXP _stochtree_var_cpp(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(var_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(x)));
+    return cpp11::as_sexp(var_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(x)));
   END_CPP11
 }
 // R_utils.cpp
-double sd_cpp(cpp11::doubles x);
+double sd_cpp(cpp11::sexp x);
 extern "C" SEXP _stochtree_sd_cpp(SEXP x) {
   BEGIN_CPP11
-    return cpp11::as_sexp(sd_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(x)));
+    return cpp11::as_sexp(sd_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::sexp>>(x)));
   END_CPP11
 }
 // forest.cpp
