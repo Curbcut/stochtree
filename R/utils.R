@@ -285,6 +285,13 @@ bindNumericCovariates <- function(numeric_df) {
   columns <- lapply(seq_len(ncol(numeric_df)), function(i) numeric_df[, i])
   stopifnot(all(vapply(columns, is.numeric, logical(1))))
   if (all(vapply(columns, function(x) is.null(attributes(x)), logical(1)))) {
+    # cbind requests writable pointers even for its input columns. With
+    # shared ALTREP columns that materializes private copies in the caller's
+    # long-lived input bundle. Read directly into a separate fitting matrix.
+    # Preserve the legacy empty-row shape (including its leading empty column).
+    if (length(columns) && length(columns[[1L]])) {
+      return(bind_numeric_covariates_readonly_cpp(columns))
+    }
     return(do.call(cbind, c(list(double(0)), columns)))
   }
   Xnum <- double(0)

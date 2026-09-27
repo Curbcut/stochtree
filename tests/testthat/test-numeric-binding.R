@@ -50,3 +50,38 @@ test_that("numeric binding preserves seeded BART samples and split counts", {
   expect_identical(actual$mean_forests$get_aggregate_split_counts(num_features),
     expected$mean_forests$get_aggregate_split_counts(num_features))
 })
+
+test_that("shared numeric inputs stay shared through binding and BART", {
+  skip_if_not_installed("mori")
+  set.seed(921)
+  original <- list(a = rnorm(2000), b = rep(c(1L, NA_integer_, 3L, 4L), 500))
+  shared <- mori::share(original)
+  a <- shared$a
+  b <- shared$b
+  x <- data.frame(a = a, b = b)
+  before <- list(serialize(a, NULL), serialize(b, NULL))
+  expect_lt(length(before[[1L]]), 1000)
+  expect_lt(length(before[[2L]]), 1000)
+  unchanged <- function() {
+    expect_identical(serialize(a, NULL), before[[1L]])
+    expect_identical(serialize(b, NULL), before[[2L]])
+  }
+  expected <- legacy_numeric_binding(as.data.frame(original))
+  expect_identical(bindNumericCovariates(x), expected)
+  unchanged()
+  trained <- preprocessTrainDataFrame(x)
+  expect_identical(preprocessPredictionDataFrame(x, trained$metadata),
+    preprocessPredictionDataFrame(as.data.frame(original), trained$metadata))
+  unchanged()
+  fit <- function(data) bart(data, original$a, num_gfr = 2,
+    num_burnin = 2, num_mcmc = 5, mean_forest_params = list(num_trees = 3),
+    general_params = list(random_seed = 37, num_threads = 1),
+    forest_retention = "importance")
+  actual <- fit(x)
+  expected_fit <- fit(as.data.frame(original))
+  expect_identical(actual$split_counts, expected_fit$split_counts)
+  expect_identical(actual$sigma2_global_samples, expected_fit$sigma2_global_samples)
+  rm(actual, expected_fit, trained)
+  invisible(gc())
+  unchanged()
+})

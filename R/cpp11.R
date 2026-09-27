@@ -160,6 +160,10 @@ rfx_dataset_get_variance_weights_cpp <- function(dataset_ptr) {
   .Call(`_stochtree_rfx_dataset_get_variance_weights_cpp`, dataset_ptr)
 }
 
+bind_numeric_covariates_readonly_cpp <- function(columns) {
+  .Call(`_stochtree_bind_numeric_covariates_readonly_cpp`, columns)
+}
+
 rfx_container_cpp <- function(num_components, num_groups) {
   .Call(`_stochtree_rfx_container_cpp`, num_components, num_groups)
 }

@@ -5,6 +5,8 @@
 #include <stochtree/partition_tracker.h>
 #include <stochtree/tree_sampler.h>
 #include <memory>
+#include <algorithm>
+#include <climits>
 
 [[cpp11::register]]
 cpp11::external_pointer<StochTree::ForestDataset> create_forest_dataset_cpp() {
@@ -387,4 +389,34 @@ cpp11::writable::doubles rfx_dataset_get_variance_weights_cpp(cpp11::external_po
         output.at(i) = dataset_ptr->VarWeightValue(i);
     }
     return output;
+}
+
+// Never request writable pointers to caller-owned covariates: ALTREP may
+// retain a private copy on the original object even though we only read it.
+[[cpp11::register]]
+cpp11::writable::doubles_matrix<> bind_numeric_covariates_readonly_cpp(cpp11::list columns) {
+    if (columns.size() == 0 || columns.size() > INT_MAX) {
+        cpp11::stop("Numeric binding requires a nonempty list of columns");
+    }
+    R_xlen_t n = Rf_xlength(columns[0]);
+    if (n > INT_MAX) cpp11::stop("Too many rows for a numeric matrix");
+    cpp11::writable::doubles_matrix<> result(static_cast<int>(n), static_cast<int>(columns.size()));
+    double* output = REAL(result);
+    for (R_xlen_t j = 0; j < columns.size(); ++j) {
+        SEXP column = columns[j];
+        if (Rf_xlength(column) != n) cpp11::stop("Numeric columns must have equal lengths");
+        double* target = output + j * n;
+        if (TYPEOF(column) == REALSXP) {
+            const double* source = REAL_RO(column);
+            std::copy(source, source + n, target);
+        } else if (TYPEOF(column) == INTSXP) {
+            const int* source = INTEGER_RO(column);
+            for (R_xlen_t i = 0; i < n; ++i) {
+                target[i] = source[i] == NA_INTEGER ? NA_REAL : static_cast<double>(source[i]);
+            }
+        } else {
+            cpp11::stop("Numeric binding requires integer or double columns");
+        }
+    }
+    return result;
 }

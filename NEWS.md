@@ -1,3 +1,10 @@
+# stochtree 0.4.6.9009
+
+* Numeric covariate binding reads ordinary integer and double columns through
+  read-only pointers. Shared ALTREP inputs no longer acquire retained private
+  copies during training or prediction preprocessing. Matrix values, missing
+  values, feature ordering and sampler behavior are unchanged.
+
 # stochtree 0.4.6.9008
 
 * Importance-only BART no longer allocates or returns training prediction draws

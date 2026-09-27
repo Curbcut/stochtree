@@ -302,6 +302,13 @@ extern "C" SEXP _stochtree_rfx_dataset_get_variance_weights_cpp(SEXP dataset_ptr
     return cpp11::as_sexp(rfx_dataset_get_variance_weights_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<StochTree::RandomEffectsDataset>>>(dataset_ptr)));
   END_CPP11
 }
+// R_data.cpp
+cpp11::writable::doubles_matrix<> bind_numeric_covariates_readonly_cpp(cpp11::list columns);
+extern "C" SEXP _stochtree_bind_numeric_covariates_readonly_cpp(SEXP columns) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(bind_numeric_covariates_readonly_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(columns)));
+  END_CPP11
+}
 // R_random_effects.cpp
 cpp11::external_pointer<StochTree::RandomEffectsContainer> rfx_container_cpp(int num_components, int num_groups);
 extern "C" SEXP _stochtree_rfx_container_cpp(SEXP num_components, SEXP num_groups) {
@@ -1702,6 +1709,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_stochtree_all_roots_forest_container_cpp",                      (DL_FUNC) &_stochtree_all_roots_forest_container_cpp,                       2},
     {"_stochtree_average_max_depth_active_forest_cpp",                 (DL_FUNC) &_stochtree_average_max_depth_active_forest_cpp,                  1},
     {"_stochtree_average_max_depth_forest_container_cpp",              (DL_FUNC) &_stochtree_average_max_depth_forest_container_cpp,               1},
+    {"_stochtree_bind_numeric_covariates_readonly_cpp",                (DL_FUNC) &_stochtree_bind_numeric_covariates_readonly_cpp,                 1},
     {"_stochtree_combine_forests_forest_container_cpp",                (DL_FUNC) &_stochtree_combine_forests_forest_container_cpp,                 2},
     {"_stochtree_compute_leaf_indices_cpp",                            (DL_FUNC) &_stochtree_compute_leaf_indices_cpp,                             3},
     {"_stochtree_create_column_vector_cpp",                            (DL_FUNC) &_stochtree_create_column_vector_cpp,                             1},
