@@ -1,0 +1,21 @@
+{
+  "qs2": "0.3.1",
+  "level": 3,
+  "cache_state": "local warm/uncontrolled",
+  "results": {
+    "forest.ntf": {
+      "local_bytes": 20358246,
+      "compressed_bytes": 2880812,
+      "compression_seconds": 0.101,
+      "decompression_seconds": 0.00900000000000001,
+      "roundtrip_SHA256_exact": true
+    },
+    "forest-all.ntf": {
+      "local_bytes": 67708778,
+      "compressed_bytes": 9163966,
+      "compression_seconds": 0.084,
+      "decompression_seconds": 0.024,
+      "roundtrip_SHA256_exact": true
+    }
+  }
+}

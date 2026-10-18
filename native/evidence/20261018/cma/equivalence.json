@@ -1,0 +1,8 @@
+{
+  "adapter_raw_bitwise": true,
+  "standalone_raw_bitwise": true,
+  "mapped_bitwise": true,
+  "legacy_scaled_random_effect_latent_bitwise": true,
+  "scope": "component equivalence; no full system qualification",
+  "binary_sha256": "9bc551b49c03c76a4cb66c5d8e4cf923180917161ad73c072afb635a0121307d"
+}

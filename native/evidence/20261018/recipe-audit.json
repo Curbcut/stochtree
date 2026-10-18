@@ -1,0 +1,23 @@
+{
+  "scope": "Three representative serialized recipes; not a full historical R-object compatibility audit",
+  "results": {
+    "ct_level": {
+      "source_sha256": "943f48b75762833c64405d34d84396385880c142484fe9fc0ef142fbb0d0c1fc",
+      "visited": 1624,
+      "truncated": false,
+      "package_or_opaque_references": []
+    },
+    "ct_change": {
+      "source_sha256": "8422be1972cdfcbe01d8b017216047ec980760fafd2995e31e51e348eb9e8136",
+      "visited": 1609,
+      "truncated": false,
+      "package_or_opaque_references": []
+    },
+    "cma": {
+      "source_sha256": "6ca09767cc441ad9730561848d90b49591234295c37f94904a62799ec9011cf0",
+      "visited": 411,
+      "truncated": false,
+      "package_or_opaque_references": []
+    }
+  }
+}
