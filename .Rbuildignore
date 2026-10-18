@@ -3,3 +3,8 @@
 ^cran-comments\.md$
 
 ^NASH-FORK\.md$
+
+^native$
+^\.github$
+^autom4te\.cache$
+^configure~$

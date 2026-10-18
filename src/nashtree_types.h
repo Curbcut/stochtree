@@ -8,3 +8,5 @@
 #include <stochtree/partition_tracker.h>
 #include <stochtree/random_effects.h>
 #include <stochtree/tree_sampler.h>
+
+#include <nashtree/inference.h>

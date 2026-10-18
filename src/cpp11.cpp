@@ -309,6 +309,42 @@ extern "C" SEXP _nashtree_bind_numeric_covariates_readonly_cpp(SEXP columns) {
     return cpp11::as_sexp(bind_numeric_covariates_readonly_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::list>>(columns)));
   END_CPP11
 }
+// R_inference.cpp
+cpp11::external_pointer<nashtree::Forest> inference_open_cpp(std::string path);
+extern "C" SEXP _nashtree_inference_open_cpp(SEXP path) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(inference_open_cpp(cpp11::as_cpp<cpp11::decay_t<std::string>>(path)));
+  END_CPP11
+}
+// R_inference.cpp
+void inference_close_cpp(cpp11::external_pointer<nashtree::Forest> ptr);
+extern "C" SEXP _nashtree_inference_close_cpp(SEXP ptr) {
+  BEGIN_CPP11
+    inference_close_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<nashtree::Forest>>>(ptr));
+    return R_NilValue;
+  END_CPP11
+}
+// R_inference.cpp
+std::string inference_metadata_cpp(cpp11::external_pointer<nashtree::Forest> ptr);
+extern "C" SEXP _nashtree_inference_metadata_cpp(SEXP ptr) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(inference_metadata_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<nashtree::Forest>>>(ptr)));
+  END_CPP11
+}
+// R_inference.cpp
+cpp11::writable::doubles_matrix<> inference_fixed_cpp(cpp11::external_pointer<nashtree::Forest> ptr, cpp11::doubles_matrix<> x, cpp11::doubles ids);
+extern "C" SEXP _nashtree_inference_fixed_cpp(SEXP ptr, SEXP x, SEXP ids) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(inference_fixed_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<nashtree::Forest>>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles_matrix<>>>(x), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(ids)));
+  END_CPP11
+}
+// R_inference.cpp
+cpp11::writable::doubles inference_mapped_cpp(cpp11::external_pointer<nashtree::Forest> ptr, cpp11::doubles_matrix<> x, cpp11::doubles ids);
+extern "C" SEXP _nashtree_inference_mapped_cpp(SEXP ptr, SEXP x, SEXP ids) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(inference_mapped_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::external_pointer<nashtree::Forest>>>(ptr), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles_matrix<>>>(x), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(ids)));
+  END_CPP11
+}
 // R_random_effects.cpp
 cpp11::external_pointer<StochTree::RandomEffectsContainer> rfx_container_cpp(int num_components, int num_groups);
 extern "C" SEXP _nashtree_rfx_container_cpp(SEXP num_components, SEXP num_groups) {
@@ -1762,6 +1798,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_nashtree_get_tree_leaves_forest_container_cpp",                (DL_FUNC) &_nashtree_get_tree_leaves_forest_container_cpp,                 3},
     {"_nashtree_get_tree_split_counts_active_forest_cpp",             (DL_FUNC) &_nashtree_get_tree_split_counts_active_forest_cpp,              3},
     {"_nashtree_get_tree_split_counts_forest_container_cpp",          (DL_FUNC) &_nashtree_get_tree_split_counts_forest_container_cpp,           4},
+    {"_nashtree_inference_close_cpp",                                 (DL_FUNC) &_nashtree_inference_close_cpp,                                  1},
+    {"_nashtree_inference_fixed_cpp",                                 (DL_FUNC) &_nashtree_inference_fixed_cpp,                                  3},
+    {"_nashtree_inference_mapped_cpp",                                (DL_FUNC) &_nashtree_inference_mapped_cpp,                                 3},
+    {"_nashtree_inference_metadata_cpp",                              (DL_FUNC) &_nashtree_inference_metadata_cpp,                               1},
+    {"_nashtree_inference_open_cpp",                                  (DL_FUNC) &_nashtree_inference_open_cpp,                                   1},
     {"_nashtree_init_json_cpp",                                       (DL_FUNC) &_nashtree_init_json_cpp,                                        0},
     {"_nashtree_initialize_forest_model_active_forest_cpp",           (DL_FUNC) &_nashtree_initialize_forest_model_active_forest_cpp,            6},
     {"_nashtree_initialize_forest_model_cpp",                         (DL_FUNC) &_nashtree_initialize_forest_model_cpp,                          6},

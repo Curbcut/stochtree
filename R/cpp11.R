@@ -164,6 +164,26 @@ bind_numeric_covariates_readonly_cpp <- function(columns) {
   .Call(`_nashtree_bind_numeric_covariates_readonly_cpp`, columns)
 }
 
+inference_open_cpp <- function(path) {
+  .Call(`_nashtree_inference_open_cpp`, path)
+}
+
+inference_close_cpp <- function(ptr) {
+  invisible(.Call(`_nashtree_inference_close_cpp`, ptr))
+}
+
+inference_metadata_cpp <- function(ptr) {
+  .Call(`_nashtree_inference_metadata_cpp`, ptr)
+}
+
+inference_fixed_cpp <- function(ptr, x, ids) {
+  .Call(`_nashtree_inference_fixed_cpp`, ptr, x, ids)
+}
+
+inference_mapped_cpp <- function(ptr, x, ids) {
+  .Call(`_nashtree_inference_mapped_cpp`, ptr, x, ids)
+}
+
 rfx_container_cpp <- function(num_components, num_groups) {
   .Call(`_nashtree_rfx_container_cpp`, num_components, num_groups)
 }

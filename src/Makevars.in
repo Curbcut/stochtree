@@ -18,6 +18,8 @@ PKG_LIBS = \
     @OPENMP_LIB@
 
 OBJECTS = \
+    inference.o \
+    R_inference.o \
     forest.o \
     kernel.o \
     R_data.o \
