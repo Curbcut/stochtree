@@ -1,4 +1,4 @@
-Package: stochtree
+Package: nashtree
 Title: Stochastic Tree Ensembles (XBART and BART) for Supervised Learning and Causal Inference
 Version: 0.4.6.9010
 Authors@R: 

@@ -3,7 +3,7 @@
 # https://github.com/microsoft/LightGBM/blob/master/R-package/configure.ac
 
 AC_PREREQ(2.69)
-AC_INIT([stochtree], [0.4.6.9000], [], [stochtree], [])
+AC_INIT([nashtree], [0.4.6.9000], [], [nashtree], [])
 # Note: consider making version number dynamic as in 
 # https://github.com/microsoft/LightGBM/blob/195c26fc7b00eb0fec252dfe841e2e66d6833954/build-cran-package.sh
 
@@ -103,7 +103,7 @@ then
         OPENMP_CXXFLAGS=''
         OPENMP_LIB=''
         echo '***********************************************************************************************'
-        echo ' OpenMP is unavailable on this macOS system. stochtree code will run single-threaded as a result.'
+        echo ' OpenMP is unavailable on this macOS system. nashtree code will run single-threaded as a result.'
         echo ' To use all CPU cores for training jobs, you should install OpenMP by running'
         echo ''
         echo '     brew install libomp'

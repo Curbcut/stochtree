@@ -3120,7 +3120,7 @@ print.bartmodel <- function(x, ...) {
   }
   if (length(model_terms) > 2) {
     summary_message <- paste0(
-      "stochtree::bart() run with ",
+      "nashtree::bart() run with ",
       paste0(
         paste0(model_terms[1:(length(model_terms) - 1)], collapse = ", "),
         ", and ",
@@ -3129,11 +3129,11 @@ print.bartmodel <- function(x, ...) {
     )
   } else if (length(model_terms) == 2) {
     summary_message <- paste0(
-      "stochtree::bart() run with ",
+      "nashtree::bart() run with ",
       paste0(model_terms, collapse = " and ")
     )
   } else {
-    summary_message <- paste0("stochtree::bart() run with ", model_terms)
+    summary_message <- paste0("nashtree::bart() run with ", model_terms)
   }
 
   # Outcome and leaf model details
@@ -3406,7 +3406,7 @@ summary.bartmodel <- function(object, ...) {
 }
 
 #' @title Plot BART Model Fit
-#' @description Plot the BART model fit and any relevant sampled quantities. This will default to a traceplot of the global error scale and the in-sample mean forest predictions for the first train set observation. Since `stochtree::bart()` is flexible and it's possible to sample a model with a fixed global error scale and no mean forest, this procedure is adaptive and will attempt to plot a trace of whichever model terms are included if these two default terms are omitted.
+#' @description Plot the BART model fit and any relevant sampled quantities. This will default to a traceplot of the global error scale and the in-sample mean forest predictions for the first train set observation. Since `nashtree::bart()` is flexible and it's possible to sample a model with a fixed global error scale and no mean forest, this procedure is adaptive and will attempt to plot a trace of whichever model terms are included if these two default terms are omitted.
 #' @param x The BART model object
 #' @param ... Additional arguments
 #' @export
