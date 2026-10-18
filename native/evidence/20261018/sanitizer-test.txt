@@ -1,0 +1,8 @@
+Internal ctest changing into directory: /tmp/nashtree-native-sanitized
+Test project /tmp/nashtree-native-sanitized
+    Start 1: native-contract
+1/1 Test #1: native-contract ..................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.06 sec

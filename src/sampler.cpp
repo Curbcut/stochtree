@@ -1,5 +1,5 @@
 #include <cpp11.hpp>
-#include "stochtree_types.h"
+#include "nashtree_types.h"
 #include <stochtree/container.h>
 #include <stochtree/discrete_sampler.h>
 #include <stochtree/leaf_model.h>

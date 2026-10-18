@@ -1,5 +1,5 @@
 #include <cpp11.hpp>
-#include "stochtree_types.h"
+#include "nashtree_types.h"
 #include <stochtree/log.h>
 #include <Eigen/Dense>
 

@@ -1199,7 +1199,7 @@ expand_dims_2d_diag <- function(input, output_size) {
 #' @noRd
 getStochtreeVersion <- function() {
   tryCatch(
-    as.character(utils::packageVersion("stochtree")),
+    as.character(utils::packageVersion("nashtree")),
     error = function(e) "dev"
   )
 }

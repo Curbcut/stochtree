@@ -1,0 +1,21 @@
+{
+  "native_library_sha256": "bc20bdcffd8b8889dea44ec798cd1e325ca80184fddc040a45bd41210a7b8a4b",
+  "source_commit": "df3260bad7682847a31257baebf8862f2f5c1c0f",
+  "nash_code_hash": "73915217b5154257422aa7a04ef8732ed5540195cbd15cdc6b89e93cd5f381ce",
+  "mode": "legacy",
+  "load_seconds": 3.649,
+  "selected_prediction_seconds": 0.0299999999999998,
+  "load_predict_seconds": 3.679,
+  "exact": true,
+  "R": "R version 4.6.1 (2026-06-24)",
+  "boundary": "preprocessed input to selected raw mean-forest outputs",
+  "artifact_sha256": "dd2bfdad24cdb71cefb6c99bff5db92879b0df87e7e056e55e6beff6be8270f9",
+  "variant": "source",
+  "repetition": 1,
+  "process_peak_bytes": 2665463808,
+  "user_seconds": 4.846689,
+  "system_seconds": 0.486315,
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "cache_state": "warm/uncontrolled local input; no independent residency proof",
+  "process_peak_scope": "fresh R process; shared application dependencies and same preloaded reference inputs"
+}

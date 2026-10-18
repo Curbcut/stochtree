@@ -45,7 +45,7 @@ run_bart_factorial <- function(
   )
 
   # Sample BART model
-  bart_model <- stochtree::bart(
+  bart_model <- nashtree::bart(
     X_train = X,
     y_train = y,
     leaf_basis_train = leaf_basis,
@@ -176,7 +176,7 @@ run_bcf_factorial <- function(
   )
 
   # Sample BART model
-  bcf_model <- stochtree::bcf(
+  bcf_model <- nashtree::bcf(
     X_train = X,
     y_train = y,
     Z_train = Z,

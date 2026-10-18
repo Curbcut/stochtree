@@ -1,0 +1,128 @@
+{
+  "source_commit": "df3260bad7682847a31257baebf8862f2f5c1c0f",
+  "baseline_commit": "94e5e5aa0519084dbbf8c0c18eaecf1943eda5a7",
+  "reference_fork": "0ac0e7d091556d3dd1b8102ac4a010805cad55d1",
+  "cache_state": "local warm/uncontrolled",
+  "boundary": "same preprocessed inputs to selected raw mean-forest predictions; fresh R processes with common NASH dependencies",
+  "results": {
+    "ct_level": {
+      "legacy-source": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 6,
+        "maximum_process_peak_bytes": 2842902528,
+        "native_library_sha256": "bc20bdcffd8b8889dea44ec798cd1e325ca80184fddc040a45bd41210a7b8a4b",
+        "median_load_seconds": 4.253,
+        "median_selected_prediction_seconds": 1.76
+      },
+      "binary-all": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 0.447,
+        "maximum_process_peak_bytes": 385875968,
+        "native_library_sha256": "1f56a2cadd2830f36a99b76390f323c408eb3fd762119f5d669559f2b8cad6bb",
+        "speedup": 13.422818791946309,
+        "peak_reduction": 0.864266901802129,
+        "time_gate_pass": true,
+        "memory_gate_pass": true,
+        "median_load_seconds": 0.161,
+        "median_selected_prediction_seconds": 0.283
+      },
+      "binary-selected": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 0.332,
+        "maximum_process_peak_bytes": 291389440,
+        "native_library_sha256": "1f56a2cadd2830f36a99b76390f323c408eb3fd762119f5d669559f2b8cad6bb",
+        "speedup": 18.072289156626503,
+        "peak_reduction": 0.8975028383386066,
+        "time_gate_pass": true,
+        "memory_gate_pass": true,
+        "median_load_seconds": 0.049,
+        "median_selected_prediction_seconds": 0.281
+      },
+      "source_compressed_bytes": 14354670,
+      "binary_selected_bytes": 20358246,
+      "binary_all_bytes": 67708778
+    },
+    "ct_change": {
+      "legacy-source": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 4.627,
+        "maximum_process_peak_bytes": 2415755264,
+        "native_library_sha256": "bc20bdcffd8b8889dea44ec798cd1e325ca80184fddc040a45bd41210a7b8a4b",
+        "median_load_seconds": 3.495,
+        "median_selected_prediction_seconds": 1.13
+      },
+      "binary-all": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 0.303,
+        "maximum_process_peak_bytes": 364691456,
+        "native_library_sha256": "1f56a2cadd2830f36a99b76390f323c408eb3fd762119f5d669559f2b8cad6bb",
+        "speedup": 15.27062706270627,
+        "peak_reduction": 0.8490362573416709,
+        "time_gate_pass": true,
+        "memory_gate_pass": true,
+        "median_load_seconds": 0.143,
+        "median_selected_prediction_seconds": 0.159
+      },
+      "binary-selected": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 0.201,
+        "maximum_process_peak_bytes": 278773760,
+        "native_library_sha256": "1f56a2cadd2830f36a99b76390f323c408eb3fd762119f5d669559f2b8cad6bb",
+        "speedup": 23.019900497512435,
+        "peak_reduction": 0.884601820327442,
+        "time_gate_pass": true,
+        "memory_gate_pass": true,
+        "median_load_seconds": 0.043,
+        "median_selected_prediction_seconds": 0.158
+      },
+      "source_compressed_bytes": 12373882,
+      "binary_selected_bytes": 18316303,
+      "binary_all_bytes": 60919641
+    },
+    "cma": {
+      "legacy-source": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 3.676,
+        "maximum_process_peak_bytes": 2665463808,
+        "native_library_sha256": "bc20bdcffd8b8889dea44ec798cd1e325ca80184fddc040a45bd41210a7b8a4b",
+        "median_load_seconds": 3.646,
+        "median_selected_prediction_seconds": 0.0300000000000002
+      },
+      "binary-all": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 0.065,
+        "maximum_process_peak_bytes": 284049408,
+        "native_library_sha256": "1f56a2cadd2830f36a99b76390f323c408eb3fd762119f5d669559f2b8cad6bb",
+        "speedup": 56.55384615384615,
+        "peak_reduction": 0.8934334027918641,
+        "time_gate_pass": true,
+        "memory_gate_pass": true,
+        "median_load_seconds": 0.062,
+        "median_selected_prediction_seconds": 0.003
+      },
+      "binary-selected": {
+        "repetitions": 3,
+        "median_load_predict_seconds": 0.023,
+        "maximum_process_peak_bytes": 246153216,
+        "native_library_sha256": "1f56a2cadd2830f36a99b76390f323c408eb3fd762119f5d669559f2b8cad6bb",
+        "speedup": 159.82608695652175,
+        "peak_reduction": 0.9076508879013074,
+        "time_gate_pass": true,
+        "memory_gate_pass": true,
+        "median_load_seconds": 0.019,
+        "median_selected_prediction_seconds": 0.004
+      },
+      "source_compressed_bytes": 9973420,
+      "binary_selected_bytes": 7834958,
+      "binary_all_bytes": 24860694
+    }
+  },
+  "validation": {
+    "native_contract": true,
+    "converter_contract": true,
+    "ASan_UBSan": true,
+    "rename_seeded_BART_RFX_BCF_exact": true,
+    "deployment_qualified": false,
+    "linux_x86_vs_mac_arm_raw_bitwise": true
+  }
+}

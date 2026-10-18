@@ -1,0 +1,18 @@
+{
+  "compiler": "g++ 13.3.0 Ubuntu 24.04.1",
+  "flags": [
+    "-std=c++17",
+    "-O2",
+    "-fno-fast-math",
+    "-ffp-contract=off"
+  ],
+  "source_commit": "df3260bad7682847a31257baebf8862f2f5c1c0f",
+  "executable_sha256": "8fdecf048635ad067775ac0e817b4949313b223bc75cded80e3bd2982f48b506",
+  "core_sha256": "618acc7e35341acd6b90181d1c07125637f56184503b7dd6a54fc1c3465fa0f7",
+  "header_sha256": "d7f86b6560c18ea42545dbd04c5950c496890d3a1c0bd313a2a8ff0997ee32cc",
+  "limits": {
+    "virtual_memory_gib": 1,
+    "cpu_seconds": 120
+  },
+  "R_linkage": false
+}

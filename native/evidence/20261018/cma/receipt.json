@@ -1,0 +1,12 @@
+{
+  "rows": 11,
+  "columns": 6,
+  "draws": 300,
+  "source_sha256": "dd2bfdad24cdb71cefb6c99bff5db92879b0df87e7e056e55e6beff6be8270f9",
+  "source_probe_sha256": "78617c30fe9695203c7a47198af7830259e6f171d74eda8ef1901f4376a2a08a",
+  "source_draws_sha256": "4835470ec2fc6dcc38d41f65e70edce52f249755ba57dc60dad9c1f663a90efb",
+  "nash": "0.20.1",
+  "stochtree": "0.4.6.9010",
+  "R": "R version 4.6.1 (2026-06-24)",
+  "legacy_latent_exact": true
+}

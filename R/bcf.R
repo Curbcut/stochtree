@@ -113,7 +113,7 @@ NULL
 #'   - `sigma2_global_shape` Shape parameter in the `IG(sigma2_global_shape, sigma2_global_scale)` global error variance model. Default: `0`.
 #'   - `sigma2_global_scale` Scale parameter in the `IG(sigma2_global_shape, sigma2_global_scale)` global error variance model. Default: `0`.
 #'   - `variable_weights` Numeric weights reflecting the relative probability of splitting on each variable. Does not need to sum to 1 but cannot be negative. Defaults to `rep(1/ncol(X_train), ncol(X_train))` if not set here. Note that if the propensity score is included as a covariate in either forest, its weight will default to `1/ncol(X_train)`. A workaround if you wish to provide a custom weight for the propensity score is to include it as a column in `X_train` and then set `propensity_covariate` to `'none'` adjust `keep_vars` accordingly for the `prognostic` or `treatment_effect` forests.
-#'   - `propensity_covariate` Whether to include the propensity score as a covariate in either or both of the forests. Enter `"none"` for neither, `"prognostic"` for the prognostic forest, `"treatment_effect"` for the treatment forest, and `"both"` for both forests. If this is not `"none"` and a propensity score is not provided, it will be estimated from (`X_train`, `Z_train`) using `stochtree::bart()`. Default: `"mu"`.
+#'   - `propensity_covariate` Whether to include the propensity score as a covariate in either or both of the forests. Enter `"none"` for neither, `"prognostic"` for the prognostic forest, `"treatment_effect"` for the treatment forest, and `"both"` for both forests. If this is not `"none"` and a propensity score is not provided, it will be estimated from (`X_train`, `Z_train`) using `nashtree::bart()`. Default: `"mu"`.
 #'   - `adaptive_coding` Whether or not to use an "adaptive coding" scheme in which a binary treatment variable is not coded manually as (0,1) or (-1,1) but learned via parameters `b_0` and `b_1` that attach to the outcome model `[b_0 (1-Z) + b_1 Z] tau(X)`. This is ignored when Z is not binary. Default: `FALSE`.
 #'   - `control_coding_init` Initial value of the "control" group coding parameter. This is ignored when Z is not binary. Default: `-0.5`.
 #'   - `treated_coding_init` Initial value of the "treatment" group coding parameter. This is ignored when Z is not binary. Default: `0.5`.
@@ -4031,7 +4031,7 @@ print.bcfmodel <- function(x, ...) {
   }
   if (length(model_terms) > 2) {
     summary_message <- paste0(
-      "stochtree::bcf() run with ",
+      "nashtree::bcf() run with ",
       paste0(
         paste0(model_terms[1:(length(model_terms) - 1)], collapse = ", "),
         ", and ",
@@ -4040,11 +4040,11 @@ print.bcfmodel <- function(x, ...) {
     )
   } else if (length(model_terms) == 2) {
     summary_message <- paste0(
-      "stochtree::bcf() run with ",
+      "nashtree::bcf() run with ",
       paste0(model_terms, collapse = " and ")
     )
   } else {
-    summary_message <- paste0("stochtree::bcf() run with ", model_terms)
+    summary_message <- paste0("nashtree::bcf() run with ", model_terms)
   }
 
   # Outcome details
@@ -4109,7 +4109,7 @@ print.bcfmodel <- function(x, ...) {
       summary_message <- paste0(
         summary_message,
         "\n",
-        "An internal propensity model was fit using stochtree::bart() in lieu of user-provided propensity scores"
+        "An internal propensity model was fit using nashtree::bart() in lieu of user-provided propensity scores"
       )
     } else {
       summary_message <- paste0(
@@ -4419,7 +4419,7 @@ summary.bcfmodel <- function(object, ...) {
 }
 
 #' @title Plot BCF Model
-#' @description Plot the BCF model fit and any relevant sampled quantities. This will default to a traceplot of the global error scale and the in-sample mean forest predictions for the first train set observation. Since `stochtree::bcf()` is flexible and it's possible to sample a model with a fixed global error scale and no mean forest, this procedure will throw an error if these two default terms are omitted.
+#' @description Plot the BCF model fit and any relevant sampled quantities. This will default to a traceplot of the global error scale and the in-sample mean forest predictions for the first train set observation. Since `nashtree::bcf()` is flexible and it's possible to sample a model with a fixed global error scale and no mean forest, this procedure will throw an error if these two default terms are omitted.
 #' @param x The BCF model object
 #' @param ... Additional arguments
 #' @export

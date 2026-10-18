@@ -1,0 +1,74 @@
+{
+  "ct_level": {
+    "fixed": {
+      "sha256": "370dd5b9643b6f572394b450973717dacc4ae08c5a7355615f755ac91a25f40a",
+      "timing": {
+        "load_seconds": 0.0521658,
+        "input_seconds": 0.000781722,
+        "prediction_seconds": 0.341431,
+        "repeats": 1,
+        "nodes": 626722
+      },
+      "macOS_ARM64_vs_Linux_x86_64_bitwise": true
+    },
+    "mapped": {
+      "sha256": "17121c16b16ec2c22c0cd2eb515752fee3712b7b5d7333e26bbd6149685a61e5",
+      "timing": {
+        "load_seconds": 0.0515752,
+        "input_seconds": 0.000405751,
+        "prediction_seconds": 0.00304868,
+        "repeats": 1,
+        "nodes": 626722
+      },
+      "macOS_ARM64_vs_Linux_x86_64_bitwise": true
+    }
+  },
+  "ct_change": {
+    "fixed": {
+      "sha256": "9e6d82f4cddd297550c38d3986ea17a476471c97b56fffca768599c47a6f1f87",
+      "timing": {
+        "load_seconds": 0.0458087,
+        "input_seconds": 0.000618682,
+        "prediction_seconds": 0.177541,
+        "repeats": 1,
+        "nodes": 562962
+      },
+      "macOS_ARM64_vs_Linux_x86_64_bitwise": true
+    },
+    "mapped": {
+      "sha256": "09ae59a68425e958d91a704d6afc8e6ab18837480a4a9960e205cf22163c5171",
+      "timing": {
+        "load_seconds": 0.045914,
+        "input_seconds": 0.000306621,
+        "prediction_seconds": 0.00172701,
+        "repeats": 1,
+        "nodes": 562962
+      },
+      "macOS_ARM64_vs_Linux_x86_64_bitwise": true
+    }
+  },
+  "cma": {
+    "fixed": {
+      "sha256": "5347f70a382152728f50809fbf4ce9fffb4c7310011512e7db43584925b5bf7e",
+      "timing": {
+        "load_seconds": 0.0210688,
+        "input_seconds": 3.994e-05,
+        "prediction_seconds": 0.00325845,
+        "repeats": 1,
+        "nodes": 212680
+      },
+      "macOS_ARM64_vs_Linux_x86_64_bitwise": true
+    },
+    "mapped": {
+      "sha256": "d123bd834e72e3584719ea00d11feffdd377de77070d40057e5a992fe5584fd2",
+      "timing": {
+        "load_seconds": 0.0199521,
+        "input_seconds": 3.198e-05,
+        "prediction_seconds": 1.717e-05,
+        "repeats": 1,
+        "nodes": 212680
+      },
+      "macOS_ARM64_vs_Linux_x86_64_bitwise": true
+    }
+  }
+}

@@ -20,7 +20,7 @@ test_that("bulk forest retention preserves sample values and order", {
       forest$save_json(a)
       expect_identical(readLines(a), before)
     }
-    expect_error(stochtree:::retain_samples_forest_container_cpp(
+    expect_error(nashtree:::retain_samples_forest_container_cpp(
       forest$forest_container_ptr, c(0L, 0L)), "strictly increasing")
     forest$retain_samples(0:3)
     forest$save_json(a)

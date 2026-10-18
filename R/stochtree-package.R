@@ -19,5 +19,5 @@
 ## usethis namespace: end
 NULL
 
-#' @useDynLib stochtree, .registration = TRUE
+#' @useDynLib nashtree, .registration = TRUE
 "_PACKAGE"

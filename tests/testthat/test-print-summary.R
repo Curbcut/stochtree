@@ -32,7 +32,7 @@ test_that("BART print method", {
   # Return value is the model object
   expect_identical(result_1, bart_model_1)
   # Key strings in output
-  expect_true(any(grepl("stochtree::bart()", out_1, fixed = TRUE)))
+  expect_true(any(grepl("nashtree::bart()", out_1, fixed = TRUE)))
   expect_true(any(grepl("mean forest", out_1, fixed = TRUE)))
   expect_true(any(grepl("constant leaf prior", out_1, fixed = TRUE)))
   expect_true(any(grepl("Outcome was standardized", out_1, fixed = TRUE)))
@@ -245,7 +245,7 @@ test_that("BCF print method", {
   # Return value is the model object
   expect_identical(result, bcf_model)
   # Key strings in output
-  expect_true(any(grepl("stochtree::bcf()", out, fixed = TRUE)))
+  expect_true(any(grepl("nashtree::bcf()", out, fixed = TRUE)))
   expect_true(any(grepl("prognostic forest", out, fixed = TRUE)))
   expect_true(any(grepl("treatment effect forest", out, fixed = TRUE)))
   expect_true(any(grepl("User-provided propensity scores", out, fixed = TRUE)))
