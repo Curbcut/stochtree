@@ -27,3 +27,13 @@ native v1 serializer and strict readback. Existing files are never replaced.
 `ntf_sync()` supplies explicit file/directory synchronization for local POSIX
 cache commits. Unsupported platforms fail rather than pretending to provide a
 durability guarantee. Publication and automatic retention are separate policies.
+
+Build receipts (0.1.2): installation records the actual R/compiler executable and
+hash/version, effective R compiler flags, package flags, cpp11 headers and source
+inventory in `native-build.json`. Unsupported compiler wrappers and nonempty
+user/site Makevars fail explicitly. Set `R_MAKEVARS_USER=/dev/null` and
+`R_MAKEVARS_SITE=/dev/null` for the reviewed build. Numeric flags remain
+`-ffp-contract=off -fno-fast-math`; prefix maps remove source working-directory
+paths from compiler/debug output. Source and toolchain identity do not promise
+identical binaries across platforms. Package the exact target-built installed
+artifact and qualify its DLL hash; retain the target build environment separately.
