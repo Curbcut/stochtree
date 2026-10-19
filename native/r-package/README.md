@@ -18,3 +18,12 @@ Validation: build/install the small package, load stochtree first and second in
 separate processes, assert identical registered historical methods, and run the
 Nash slice-F fixed/streamed/legacy/deferred/corruption checks. These bounded
 checks do not qualify an image, a complete scenario or production use.
+
+Loaded producer conversion can now pass plain preorder node/offset arrays to
+`ntf_write()`. The producer traverses its own handle; no training pointer is
+reinterpreted across library boundaries. The writer validates dimensions,
+original IDs, topology, leaf/split types and byte/node limits, then uses the same
+native v1 serializer and strict readback. Existing files are never replaced.
+`ntf_sync()` supplies explicit file/directory synchronization for local POSIX
+cache commits. Unsupported platforms fail rather than pretending to provide a
+durability guarantee. Publication and automatic retention are separate policies.
